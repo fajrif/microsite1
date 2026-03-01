@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import Image from "next/image"
 
 const loginSchema = z.object({
     email: z.string().email('Please enter a valid email'),
@@ -59,12 +60,34 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="w-full max-w-md">
+        <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+            {/* Background image */}
+            <Image
+                src="/images/admin-bg.png"
+                alt="Background"
+                fill
+                className="object-cover object-center"
+                priority
+                unoptimized
+            />
+            {/* Dark overlay for readability */}
+            <div className="absolute inset-0 bg-black/50" />
+
+            {/* Login card */}
+            <div className="relative z-10 w-full max-w-md">
                 <div className="bg-white shadow-lg rounded-lg p-8">
                     <div className="mb-8 text-center">
-                        <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
-                        <p className="mt-2 text-gray-600">Sign in to your account</p>
+                        <div className="flex h-16 items-center justify-center px-4">
+                            <Image
+                                src="/images/logo-black.png"
+                                alt="Spotify Advertising"
+                                width={140}
+                                height={40}
+                                className="h-8 w-auto"
+                                unoptimized
+                            />
+                        </div>
+                        <p className="mt-2 text-gray-600">Sign in to admin panel</p>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

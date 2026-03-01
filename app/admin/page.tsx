@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { Users, FileText } from 'lucide-react'
+import { Layers, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default async function AdminDashboard() {
@@ -13,24 +13,24 @@ export default async function AdminDashboard() {
     }
 
     // Get statistics
-    const [adminCount, articleCount] = await Promise.all([
-        prisma.admin.count(),
-        prisma.article.count(),
+    const [showcaseCount, sampleCount] = await Promise.all([
+        prisma.showcase.count(),
+        prisma.sample.count(),
     ])
 
     const dashboardStat = [
         {
             key: 1,
-            title: "Total Users",
-            value: adminCount,
-            icon: Users,
+            title: "Total Showcases",
+            value: showcaseCount,
+            icon: Layers,
             color: "text-blue-600",
         },
         {
             key: 2,
-            title: "Total Articles",
-            value: articleCount,
-            icon: FileText,
+            title: "Total Samples",
+            value: sampleCount,
+            icon: Music,
             color: "text-green-600",
         },
     ]
@@ -66,8 +66,8 @@ export default async function AdminDashboard() {
                 <div className="space-y-3 text-sm text-gray-600">
                     <p>• Use the sidebar to navigate between different sections</p>
                     <p>• Manage admin users in the Admins section</p>
-                    <p>• Create and publish articles in the Articles section</p>
-                    <p>• Organize content using Categories</p>
+                    <p>• Create and publish showcases in the Showcases section</p>
+                    <p>• Organize content using Classifications</p>
                     <p>• Click "Change Password" in the top bar to update your profile</p>
                 </div>
             </div>

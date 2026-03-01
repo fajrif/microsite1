@@ -61,7 +61,7 @@ export function Navigation() {
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
-                    href="/about"
+                    href="/showcases"
                     className={cn(
                       "uppercase transition-all text-sm px-3 py-2 rounded-md",
                       isScrolled
@@ -69,11 +69,10 @@ export function Navigation() {
                         : "text-white hover:text-[hsl(var(--ptr-primary))] focus:text-white/80"
                     )}
                   >
-                    About
+                    Showcases
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-
             </NavigationMenuList>
           </NavigationMenu>
 
@@ -91,11 +90,11 @@ export function Navigation() {
           <>
             <div className="md:hidden pb-4 space-y-3 bg-black text-sm text-white shadow-lg rounded-b-lg p-4 mb-4">
               <Link
-                href="/about"
+                href="/showcases"
                 className="block uppercase transition-colors hover:text-primary"
                 onClick={() => setIsOpen(false)}
               >
-                About
+                Showcases
               </Link>
 
             </div>

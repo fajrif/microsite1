@@ -3,19 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { cn } from "@/lib/utils";
 import { motion, Variants } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
 import Image from 'next/image';
-
-interface Feature {
-    icon: LucideIcon;
-    title: string;
-    description: string;
-}
+import { ShinyButton } from './shiny-button'
 
 interface BenefitsSectionHeroProps {
     title: React.ReactNode;
     subtitle?: string;
-    features: Feature[];
+    caption?: string;
     backgroundImage: string;
     ctaButton?: {
         text: string;
@@ -30,7 +24,7 @@ const BenefitsSectionHero: React.FC<BenefitsSectionHeroProps> = ({
     className,
     title,
     subtitle,
-    features,
+    caption,
     backgroundImage,
     ctaButton,
     imagePosition = 'right',
@@ -49,8 +43,7 @@ const BenefitsSectionHero: React.FC<BenefitsSectionHeroProps> = ({
         dark: {
             title: 'text-white',
             subtitle: 'text-white/70',
-            featureTitle: 'text-white',
-            featureDesc: 'text-white/60',
+            caption: 'text-white/70',
             iconBg: 'bg-white/10',
             iconColor: 'text-white',
             hoverBg: 'hover:bg-white/5',
@@ -61,8 +54,7 @@ const BenefitsSectionHero: React.FC<BenefitsSectionHeroProps> = ({
         light: {
             title: '',
             subtitle: '',
-            featureTitle: '',
-            featureDesc: 'text-gray-600',
+            caption: '',
             iconBg: 'bg-[#dedede]',
             iconColor: 'text-gray-900',
             hoverBg: 'hover:bg-gray-900/5',
@@ -100,74 +92,60 @@ const BenefitsSectionHero: React.FC<BenefitsSectionHeroProps> = ({
     };
 
     const ContentSection = (
-        <div className="flex w-full flex-col justify-center p-8 md:w-1/2 md:p-12 lg:p-16 items-center md:items-start text-center md:text-left">
+        <div className="flex w-full flex-col bg-primary py-12 md:py-16 pl-8 md:pl-12 lg:pl-16 md:w-1/2 min-h-screen items-center md:items-start text-center md:text-left">
             <motion.div
                 initial="hidden"
                 animate={isVisible ? "visible" : "hidden"}
                 variants={containerVariants}
-                className="md:pl-14 lg:pl-20"
+                className="flex flex-col h-full flex-1 w-full"
             >
 
                 <motion.div variants={itemVariants} className="flex justify-center md:justify-start">
                     <Image
                         src="/images/logo.png"
                         alt="Spotify Advertising"
-                        width={150}
-                        height={40}
-                        className="mb-8 h-12 w-auto"
+                        width={280}
+                        height={80}
+                        className="mb-8 w-48 md:w-60 lg:w-72 h-auto"
                         unoptimized
                     />
                 </motion.div>
 
-                <motion.h2
-                    className={`text-2xl font-regular uppercase leading-tight md:text-3xl lg:text-4xl ${c.title} mb-6 md:mb-10`}
-                    variants={itemVariants}
-                >
-                    {title}
-                </motion.h2>
-
-                {subtitle && (
-                    <motion.p
-                        className={`mb-8 max-w-md text-base ${c.subtitle} mx-auto md:mx-0`}
+                <div className="flex-1 flex flex-col justify-center">
+                    <motion.h1
+                        className={`drop-shadow-sm font-display text-3xl md:text-5xl lg:text-5xl font-bold leading-none --tracking-widest text-[hsl(var(--ptr-primary))] ${c.title} mb-2`}
                         variants={itemVariants}
                     >
-                        {subtitle}
-                    </motion.p>
-                )}
+                        {title}
+                    </motion.h1>
 
-                {/* Features Grid */}
-                <motion.div
-                    className="grid gap-4 grid-cols-2 sm:grid-cols-2"
-                    variants={containerVariants}
-                >
-                    {features.map((feature, index) => {
-                        const Icon = feature.icon;
-                        return (
-                            <motion.div
-                                key={index}
-                                className={`flex flex-col md:flex-row items-center md:items-start gap-3 rounded-lg p-3 transition-colors ${c.hoverBg}`}
-                                variants={itemVariants}
-                            >
-                                <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${c.iconBg}`}>
-                                    <Icon className={`h-5 w-5 ${c.iconColor}`} />
-                                </div>
-                                <div>
-                                    <h3 className={`text-sm md:text-base font-medium ${c.featureTitle}`}>{feature.title}</h3>
-                                    <p className={`text-sm ${c.featureDesc}`}>{feature.description}</p>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </motion.div>
+                    {caption && (
+                        <motion.h1
+                            className={`drop-shadow-sm font-display text-3xl md:text-5xl lg:text-5xl font-light leading-none --tracking-widest text-[hsl(var(--ptr-primary))] ${c.title} mb-6 md:mb-8`}
+                            variants={itemVariants}
+                        >
+                            {caption}
+                        </motion.h1>
+                    )}
+
+                    {subtitle && (
+                        <motion.p
+                            className={`text-xl md:text-2xl text-white max-w-3xl ${c.subtitle} leading-relaxed`}
+                            variants={itemVariants}
+                        >
+                            {subtitle}
+                        </motion.p>
+                    )}
+                </div>
 
                 {ctaButton && (
-                    <motion.div className="mt-8 flex justify-center md:justify-start" variants={itemVariants}>
-                        <a
+                    <motion.div className="flex justify-center md:justify-start" variants={itemVariants}>
+                        <ShinyButton
                             href={ctaButton.href}
-                            className="inline-flex items-center gap-2 rounded-2xl bg-[#dedede] px-6 py-3 text-sm font-medium transition-colors hover:bg-gray-900/20"
+                            className={`text-white rounded-4xl text-base py-3 mb-12 md:mb-16`}
                         >
                             {ctaButton.text}
-                        </a>
+                        </ShinyButton>
                     </motion.div>
                 )}
             </motion.div>
@@ -175,46 +153,48 @@ const BenefitsSectionHero: React.FC<BenefitsSectionHeroProps> = ({
     );
 
     const ImageSection = (
-        <motion.div
-            className="hidden md:block relative min-h-[300px] w-full overflow-hidden md:min-h-[400px] md:w-1/2"
-            initial={{
-                clipPath: imagePosition === 'right'
-                    ? 'polygon(100% 0, 100% 0, 100% 100%, 100% 100%)'
-                    : 'polygon(0 0, 0 0, 0 100%, 0 100%)'
-            }}
-            animate={isVisible ? {
-                clipPath: imagePosition === 'right'
-                    ? 'polygon(15% 0, 100% 0, 100% 100%, 0% 100%)'
-                    : 'polygon(0 0, 85% 0, 100% 100%, 0 100%)'
-            } : {
-                clipPath: imagePosition === 'right'
-                    ? 'polygon(100% 0, 100% 0, 100% 100%, 100% 100%)'
-                    : 'polygon(0 0, 0 0, 0 100%, 0 100%)'
-            }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        >
-            <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{
-                    backgroundImage: `url(${backgroundImage})`,
-                }}
-            />
-            {/* Diagonal overlay for visual interest */}
-            <div
-                className={`absolute inset-0 ${variant === 'light' ? 'bg-gradient-to-r from-sk-gold/60 to-transparent' : 'bg-gradient-to-r from-black/40 to-transparent'}`}
-                style={{
+        <div className="hidden md:block relative min-h-[300px] w-full md:min-h-screen md:w-1/2 pr-8 md:pr-12 lg:pr-16 pl-0">
+            <motion.div
+                className="relative w-full h-full overflow-hidden"
+                initial={{
                     clipPath: imagePosition === 'right'
-                        ? 'polygon(0 0, 40% 0, 0 100%, 0 100%)'
-                        : 'polygon(60% 0, 100% 0, 100% 100%, 100% 100%)'
+                            ? 'ellipse(0% 0% at 100% 50%)'
+                            : 'ellipse(0% 0% at 0% 50%)'
                 }}
-            />
-        </motion.div>
+                animate={isVisible ? {
+                    clipPath: imagePosition === 'right'
+                            ? 'ellipse(100% 100% at 100% 50%)'
+                            : 'ellipse(100% 100% at 0% 50%)'
+                } : {
+                    clipPath: imagePosition === 'right'
+                            ? 'ellipse(0% 0% at 100% 50%)'
+                            : 'ellipse(0% 0% at 0% 50%)'
+                }}
+                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+                <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{
+                        backgroundImage: `url(${backgroundImage})`,
+                    }}
+                />
+                {/* Curved overlay for visual interest */}
+                <div
+                    className={`absolute inset-0 ${variant === 'light' ? 'bg-gradient-to-r from-sk-gold/60 to-transparent' : 'bg-gradient-to-r from-black/40 to-transparent'}`}
+                    style={{
+                        clipPath: imagePosition === 'right'
+                            ? 'ellipse(100% 100% at 100% 50%)'
+                            : 'ellipse(100% 100% at 0% 50%)'
+                    }}
+                />
+            </motion.div>
+        </div>
     );
 
     return (
         <section
             className={cn(
-                "relative flex min-h-[400px] w-full flex-col overflow-hidden md:flex-row",
+                "relative flex min-h-screen w-full flex-col overflow-hidden md:flex-row",
                 className
             )}
         >

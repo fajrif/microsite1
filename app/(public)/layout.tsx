@@ -1,6 +1,5 @@
 import type React from "react"
-import { Navigation } from "@/components/Navigation"
-import { Footer } from "@/components/Footer"
+import { PublicShell } from "@/components/PublicShell"
 import "@/styles/globals.css"
 
 export default function PublicLayout({
@@ -9,10 +8,8 @@ export default function PublicLayout({
     children: React.ReactNode
 }) {
     return (
-        <>
-            <Navigation />
+        <PublicShell>
             {children}
-            <Footer />
-        </>
+        </PublicShell>
     )
 }

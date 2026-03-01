@@ -8,7 +8,9 @@ import {
   FolderOpen,
   Briefcase,
   Inbox,
-  X
+  X,
+  Layers,
+  Presentation
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -23,10 +25,8 @@ export default function Sidebar() {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Admins', href: '/admin/admins', icon: Users },
-    { name: 'Articles', href: '/admin/articles', icon: FileText },
-    { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
-    { name: 'Careers', href: '/admin/careers', icon: Briefcase },
-    { name: 'Inquiries', href: '/admin/inquiries', icon: Inbox },
+    { name: 'Classifications', href: '/admin/classifications', icon: Layers },
+    { name: 'Showcases', href: '/admin/showcases', icon: Presentation },
   ]
 
   return (
@@ -39,7 +39,7 @@ export default function Sidebar() {
             <div className="flex h-full flex-col">
               <div className="flex h-16 items-center justify-between border-b bg-white px-4">
                 <Image
-                  src="/images/logo.png"
+                  src="/images/logo-black.png"
                   alt="Spotify Advertising"
                   width={140}
                   height={40}
@@ -86,7 +86,7 @@ export default function Sidebar() {
         <div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-200">
           <div className="flex h-16 items-center justify-center border-b bg-white px-4">
             <Image
-              src="/images/logo.png"
+              src="/images/logo-black.png"
               alt="Spotify Advertising"
               width={140}
               height={40}
