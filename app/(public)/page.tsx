@@ -10,7 +10,7 @@ export default function HomePage() {
       <section id="banner-section" className="bg-primary">
         {/* Hero Section with Image Background */}
         <ImageHeroContent
-          image="/images/banner1.png"
+          image="/images/banner-advertising.png"
           text="Advertising Strategy"
         />
 
