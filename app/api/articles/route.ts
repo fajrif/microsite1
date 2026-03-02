@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { articleSchema } from '@/lib/validations/article'
-import { put } from '@vercel/blob'
+import { uploadFile } from '@/lib/storage'
 import { generateSlug } from '@/lib/slug'
 
 // GET /api/articles
@@ -80,26 +80,7 @@ export async function POST(request: Request) {
 
         // Handle main image upload
         if (image && image.size > 0) {
-            if (process.env.BLOB_READ_WRITE_TOKEN) {
-                // Production: Upload to Vercel Blob
-                const blob = await put(image.name, image, {
-                    access: 'public',
-                    addRandomSuffix: true,
-                })
-                imageUrl = blob.url
-            } else {
-                // Development: Save to public directory
-                const bytes = await image.arrayBuffer()
-                const buffer = Buffer.from(bytes)
-                const fileName = `${Date.now()}-${image.name}`
-                const fs = await import('fs/promises')
-                const path = await import('path')
-
-                const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-                await fs.mkdir(uploadDir, { recursive: true })
-                await fs.writeFile(path.join(uploadDir, fileName), buffer)
-                imageUrl = `/uploads/${fileName}`
-            }
+            imageUrl = await uploadFile(image, image.name)
         }
 
         // Handle gallery images upload
@@ -108,24 +89,7 @@ export async function POST(request: Request) {
 
         for (const file of galleryFiles) {
             if (file && file.size > 0) {
-                if (process.env.BLOB_READ_WRITE_TOKEN) {
-                    const blob = await put(file.name, file, {
-                        access: 'public',
-                        addRandomSuffix: true,
-                    })
-                    galleryImages.push(blob.url)
-                } else {
-                    const bytes = await file.arrayBuffer()
-                    const buffer = Buffer.from(bytes)
-                    const fileName = `${Date.now()}-${file.name}`
-                    const fs = await import('fs/promises')
-                    const path = await import('path')
-
-                    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-                    await fs.mkdir(uploadDir, { recursive: true })
-                    await fs.writeFile(path.join(uploadDir, fileName), buffer)
-                    galleryImages.push(`/uploads/${fileName}`)
-                }
+                galleryImages.push(await uploadFile(file, file.name))
             }
         }
 

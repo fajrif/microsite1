@@ -2,16 +2,16 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { put, del } from '@vercel/blob'
+import { uploadFile, deleteFile } from '@/lib/storage'
 import { generateSlug } from '@/lib/slug'
 
-// Helper function to delete blob files
-async function deleteBlobIfExists(url: string | null | undefined) {
-    if (url && url.includes('blob.vercel-storage.com')) {
+// Helper function to delete stored files
+async function deleteStoredFile(url: string | null | undefined) {
+    if (url) {
         try {
-            await del(url)
+            await deleteFile(url)
         } catch (error) {
-            console.error('Error deleting blob:', error)
+            console.error('Error deleting file:', error)
         }
     }
 }
@@ -71,29 +71,11 @@ export async function PUT(
 
         // Handle image upload if new image provided
         if (image && image.size > 0) {
-            // Delete old main image from blob storage if exists
+            // Delete old main image if exists
             if (currentArticle?.image) {
-                await deleteBlobIfExists(currentArticle.image)
+                await deleteStoredFile(currentArticle.image)
             }
-
-            if (process.env.BLOB_READ_WRITE_TOKEN) {
-                const blob = await put(image.name, image, {
-                    access: 'public',
-                    addRandomSuffix: true,
-                })
-                imageUrl = blob.url
-            } else {
-                const bytes = await image.arrayBuffer()
-                const buffer = Buffer.from(bytes)
-                const fileName = `${Date.now()}-${image.name}`
-                const fs = await import('fs/promises')
-                const path = await import('path')
-
-                const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-                await fs.mkdir(uploadDir, { recursive: true })
-                await fs.writeFile(path.join(uploadDir, fileName), buffer)
-                imageUrl = `/uploads/${fileName}`
-            }
+            imageUrl = await uploadFile(image, image.name)
         }
 
         // Handle gallery images
@@ -106,24 +88,7 @@ export async function PUT(
 
         for (const file of galleryFiles) {
             if (file && file.size > 0) {
-                if (process.env.BLOB_READ_WRITE_TOKEN) {
-                    const blob = await put(file.name, file, {
-                        access: 'public',
-                        addRandomSuffix: true,
-                    })
-                    newGalleryImages.push(blob.url)
-                } else {
-                    const bytes = await file.arrayBuffer()
-                    const buffer = Buffer.from(bytes)
-                    const fileName = `${Date.now()}-${file.name}`
-                    const fs = await import('fs/promises')
-                    const path = await import('path')
-
-                    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-                    await fs.mkdir(uploadDir, { recursive: true })
-                    await fs.writeFile(path.join(uploadDir, fileName), buffer)
-                    newGalleryImages.push(`/uploads/${fileName}`)
-                }
+                newGalleryImages.push(await uploadFile(file, file.name))
             }
         }
 
@@ -202,15 +167,12 @@ export async function DELETE(
             select: { image: true, gallery_images: true }
         })
 
-        // Delete blob files if they exist
+        // Delete stored files if they exist
         if (article) {
-            // Delete main image
-            await deleteBlobIfExists(article.image)
-
-            // Delete gallery images
+            await deleteStoredFile(article.image)
             if (article.gallery_images && Array.isArray(article.gallery_images)) {
                 for (const galleryImage of article.gallery_images) {
-                    await deleteBlobIfExists(galleryImage as string)
+                    await deleteStoredFile(galleryImage as string)
                 }
             }
         }

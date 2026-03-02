@@ -51,7 +51,7 @@ export default function RootLayout({
         <html lang="en" className={inter.variable}>
             <body className={`${inter.className} antialiased`}>
                 {children}
-                <Analytics />
+                {process.env.VERCEL && <Analytics />}
             </body>
         </html>
     )
