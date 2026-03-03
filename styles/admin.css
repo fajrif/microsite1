@@ -69,7 +69,8 @@
     }
 
     body {
-        @apply bg-background text-foreground font-inter;
+        @apply bg-background text-foreground;
+        font-family: var(--font-inter), sans-serif;
     }
 }
 

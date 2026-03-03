@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
@@ -10,33 +9,20 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
-async function uploadAsset(srcRelative: string, destFileName: string): Promise<string> {
+function copyAsset(srcRelative: string, destFileName: string): string {
     const srcPath = path.join(process.cwd(), srcRelative)
-
-    if (!fs.existsSync(srcPath)) {
-        console.warn(`⚠️  Asset not found, skipping: ${srcRelative}`)
-        return `/uploads/${destFileName}`
-    }
-
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-        const { put } = await import('@vercel/blob')
-        const buffer = fs.readFileSync(srcPath)
-        const blob = await put(destFileName, buffer, {
-            access: 'public',
-            addRandomSuffix: false,
-        })
-        return blob.url
-    }
-
-    // Local fallback
     const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+
     if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true })
     }
+
     const destPath = path.join(uploadDir, destFileName)
-    if (!fs.existsSync(destPath)) {
+
+    if (!fs.existsSync(destPath) && fs.existsSync(srcPath)) {
         fs.copyFileSync(srcPath, destPath)
     }
+
     return `/uploads/${destFileName}`
 }
 
@@ -100,8 +86,8 @@ async function main() {
     ]
 
     const classifications = await Promise.all(
-        classificationData.map(async (c) => {
-            const imageUrl = await uploadAsset(
+        classificationData.map((c) => {
+            const imageUrl = copyAsset(
                 `public/images/classifications/${c.image}`,
                 `classification-${c.image}`
             )
@@ -124,9 +110,9 @@ async function main() {
     // ============================================
     const showcaseId = 'showcase-porsche-audio'
 
-    // Upload sample assets
-    const sampleImage = await uploadAsset('public/images/showcases/sample.png', 'showcase-sample.png')
-    const sampleAudio = await uploadAsset('public/audio/sample-blackbird.wav', 'showcase-sample-blackbird.wav')
+    // Copy sample assets
+    const sampleImage = copyAsset('public/images/showcases/sample.png', 'showcase-sample.png')
+    const sampleAudio = copyAsset('public/audio/sample-blackbird.wav', 'showcase-sample-blackbird.wav')
 
     const showcase = await prisma.showcase.upsert({
         where: { id: showcaseId },

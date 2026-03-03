@@ -74,8 +74,9 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-inter: var(--font-inter), sans-serif;
-  --font-header: var(--font-inter), sans-serif;
-  --font-family-header: var(--font-inter), sans-serif;
+  --font-spotify-mix-wide: var(--font-spotify-mix-wide), sans-serif;
+  --font-header: var(--font-spotify-mix-wide), sans-serif;
+  --font-family-header: var(--font-spotify-mix-wide), sans-serif;
 }
 
 @layer components {
@@ -94,7 +95,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-spotify-mix-wide), sans-serif;
   }
 
   h1,
@@ -103,7 +104,7 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-spotify-mix-wide), sans-serif;
   }
 }
 
