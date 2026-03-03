@@ -49,13 +49,13 @@ export function Navigation() {
   }, [])
 
   useEffect(() => {
-    if (isShowcaseDetail && isOpen && treeData.length === 0) {
+    if (isOpen && treeData.length === 0) {
       fetch('/api/classifications?withShowcases=true')
         .then((r) => r.json())
         .then((data) => setTreeData(data.classifications || []))
         .catch(() => { })
     }
-  }, [isShowcaseDetail, isOpen, treeData.length])
+  }, [isOpen, treeData.length])
 
   return (
     <nav
@@ -96,7 +96,7 @@ export function Navigation() {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden pb-4 bg-black text-sm text-white shadow-lg rounded-b-lg px-4 pt-2 mb-4">
-            {isShowcaseDetail && treeData.length > 0 ? (
+            {treeData.length > 0 && (
               <TreeProvider
                 defaultExpandedIds={activeClassificationId ? [activeClassificationId] : []}
                 showIcons={false}
@@ -164,14 +164,6 @@ export function Navigation() {
                   ))}
                 </TreeView>
               </TreeProvider>
-            ) : (
-              <Link
-                href="/showcases"
-                className="block py-3 uppercase transition-colors hover:text-[hsl(var(--ptr-primary))]"
-                onClick={() => setIsOpen(false)}
-              >
-                Showcases
-              </Link>
             )}
           </div>
         )}
