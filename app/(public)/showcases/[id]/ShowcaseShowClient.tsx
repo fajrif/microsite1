@@ -31,6 +31,10 @@ interface Showcase {
     tagline: string
     objective: string | null
     solution: string | null
+    campaign_dates: string | null
+    market: string | null
+    formats: string | null
+    source: string | null
     classification: {
         id: string
         name: string
@@ -266,6 +270,33 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                             </div>
                                         ))}
                                     </div>
+                                </div>
+                            )}
+
+                            {/* Campaign Details */}
+                            {(showcase.campaign_dates || showcase.market || showcase.formats || showcase.source) && (
+                                <div className="mt-10 pt-6 border-t border-white/10">
+                                    <p className="text-sm font-light text-white/80 leading-relaxed">
+                                        {[
+                                            showcase.campaign_dates ? `Campaign dates: ${showcase.campaign_dates}` : null,
+                                            showcase.formats ? `Formats: ${showcase.formats}` : null,
+                                            showcase.market ? `Market: ${showcase.market}` : null,
+                                        ]
+                                            .filter(Boolean)
+                                            .map((item, i, arr) => (
+                                                <span key={i}>
+                                                    <strong className="font-bold">{item!.split(': ')[0]}: </strong>
+                                                    {item!.split(': ').slice(1).join(': ')}
+                                                    {i < arr.length - 1 && <span className="mx-2 text-white/30">|</span>}
+                                                </span>
+                                            ))
+                                        }
+                                    </p>
+                                    {showcase.source && (
+                                        <p className="text-sm font-light text-white/80 mt-1">
+                                            <strong className="font-bold">Source: </strong>{showcase.source}
+                                        </p>
+                                    )}
                                 </div>
                             )}
                         </div>
