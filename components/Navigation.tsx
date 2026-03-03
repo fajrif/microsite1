@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import {
   NavigationMenu,
@@ -12,9 +13,20 @@ import {
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
 
+interface ClassificationWithShowcases {
+  id: string
+  name: string
+  showcases: { id: string; name: string }[]
+}
+
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [treeData, setTreeData] = useState<ClassificationWithShowcases[]>([])
+  const pathname = usePathname()
+
+  const isShowcaseDetail = pathname.startsWith('/showcases/') && pathname !== '/showcases'
+  const currentShowcaseId = isShowcaseDetail ? pathname.split('/').pop() ?? '' : ''
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,11 +34,19 @@ export function Navigation() {
     }
 
     window.addEventListener("scroll", handleScroll)
-    // Check initial scroll position
     handleScroll()
 
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (isShowcaseDetail && isOpen && treeData.length === 0) {
+      fetch('/api/classifications?withShowcases=true')
+        .then((r) => r.json())
+        .then((data) => setTreeData(data.classifications || []))
+        .catch(() => { })
+    }
+  }, [isShowcaseDetail, isOpen, treeData.length])
 
   return (
     <nav
@@ -55,27 +75,6 @@ export function Navigation() {
             />
           </Link>
 
-          {/* Desktop Navigation */}
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList className="gap-4">
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/showcases"
-                    className={cn(
-                      "uppercase transition-all text-sm px-3 py-2 rounded-md",
-                      isScrolled
-                        ? "text-white hover:text-[hsl(var(--ptr-primary))] focus:text-white/80"
-                        : "text-white hover:text-[hsl(var(--ptr-primary))] focus:text-white/80"
-                    )}
-                  >
-                    Showcases
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -89,14 +88,35 @@ export function Navigation() {
         {isOpen && (
           <>
             <div className="md:hidden pb-4 space-y-3 bg-black text-sm text-white shadow-lg rounded-b-lg p-4 mb-4">
-              <Link
-                href="/showcases"
-                className="block uppercase transition-colors hover:text-primary"
-                onClick={() => setIsOpen(false)}
-              >
-                Showcases
-              </Link>
-
+              {isShowcaseDetail && treeData.length > 0 && (
+                <div className="space-y-3">
+                  {treeData.map((classification) => (
+                    <div key={classification.id}>
+                      <p className="text-[10px] uppercase tracking-widest text-white/50 mb-1">
+                        {classification.name}
+                      </p>
+                      <ul className="space-y-0.5 pl-2">
+                        {classification.showcases.map((showcase) => (
+                          <li key={showcase.id}>
+                            <Link
+                              href={`/showcases/${showcase.id}`}
+                              className={cn(
+                                'block px-2 py-1.5 rounded text-sm transition-colors',
+                                showcase.id === currentShowcaseId
+                                  ? 'bg-[hsl(var(--ptr-primary))] text-primary font-medium'
+                                  : 'text-white/80 hover:text-white'
+                              )}
+                              onClick={() => setIsOpen(false)}
+                            >
+                              {showcase.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}

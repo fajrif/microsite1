@@ -35,28 +35,22 @@ export default async function ShowcaseDetailPage({
 
     if (!showcase) notFound()
 
-    // Get next showcase for navigation
-    const nextShowcase = await prisma.showcase.findFirst({
-        where: {
-            createdAt: { gt: showcase.createdAt },
+    const allClassifications = await prisma.classification.findMany({
+        select: {
+            id: true,
+            name: true,
+            showcases: {
+                select: { id: true, name: true },
+                orderBy: { createdAt: 'asc' },
+            },
         },
-        orderBy: { createdAt: 'asc' },
-        select: { id: true, name: true },
+        orderBy: { id: 'asc' },
     })
-
-    // If no next, wrap around to first
-    const fallbackNext = !nextShowcase
-        ? await prisma.showcase.findFirst({
-            where: { id: { not: showcase.id } },
-            orderBy: { createdAt: 'asc' },
-            select: { id: true, name: true },
-        })
-        : null
 
     return (
         <ShowcaseShowClient
             showcase={showcase}
-            nextShowcase={nextShowcase || fallbackNext}
+            allClassifications={allClassifications}
         />
     )
 }

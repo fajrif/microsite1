@@ -33,6 +33,23 @@ export async function GET(request: Request) {
             return NextResponse.json({ classifications })
         }
 
+        // Return classifications with their showcases (for sidebar tree)
+        const withShowcases = searchParams.get('withShowcases')
+        if (withShowcases === 'true') {
+            const classifications = await prisma.classification.findMany({
+                select: {
+                    id: true,
+                    name: true,
+                    showcases: {
+                        select: { id: true, name: true },
+                        orderBy: { createdAt: 'asc' },
+                    },
+                },
+                orderBy: { createdAt: 'asc' },
+            })
+            return NextResponse.json({ classifications })
+        }
+
         // Get total count for pagination
         const total = await prisma.classification.count({ where })
 

@@ -2,7 +2,6 @@
 
 import { usePathname } from 'next/navigation'
 import { Navigation } from '@/components/Navigation'
-import { Footer } from '@/components/Footer'
 
 export function PublicShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
@@ -12,7 +11,6 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
         <>
             {!isHome && <Navigation />}
             {children}
-            {!isHome && <Footer />}
         </>
     )
 }
