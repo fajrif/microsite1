@@ -146,7 +146,7 @@ model Showcase {
 
 model Sample {
   id          String   @id @default(uuid()) @db.Uuid
-  name        String   @unique
+  name        String
   description String?
   showcase_id String   @db.Uuid
   image       String
