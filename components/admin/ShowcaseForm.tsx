@@ -18,9 +18,9 @@ interface SampleEntry {
     name: string
     description: string
     imageFile: File | null
-    audioFile: File | null
     imagePreview: string | null
-    audioName: string | null
+    audio: string
+    videoLink: string
     isExisting: boolean
 }
 
@@ -74,9 +74,9 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 name: s.name,
                 description: s.description || '',
                 imageFile: null,
-                audioFile: null,
                 imagePreview: s.image,
-                audioName: s.audio?.split('/').pop() || 'existing audio',
+                audio: s.audio || '',
+                videoLink: s.video_link || '',
                 isExisting: true,
             }))
         }
@@ -104,9 +104,9 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             name: '',
             description: '',
             imageFile: null,
-            audioFile: null,
             imagePreview: null,
-            audioName: null,
+            audio: '',
+            videoLink: '',
             isExisting: false,
         }])
     }
@@ -129,21 +129,9 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 const updated = [...samples]
                 updated[index].imageFile = file
                 updated[index].imagePreview = reader.result as string
-                updated[index].isExisting = false
                 setSamples(updated)
             }
             reader.readAsDataURL(file)
-        }
-    }
-
-    const handleSampleAudio = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            const updated = [...samples]
-            updated[index].audioFile = file
-            updated[index].audioName = file.name
-            updated[index].isExisting = false
-            setSamples(updated)
         }
     }
 
@@ -184,22 +172,37 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             })
 
             // Separate existing and new samples
-            const existingSampleIds: string[] = []
-            const newSamples: { name: string; description: string }[] = []
+            const existingSamples: { id: string; name: string; description: string; audio: string; video_link: string }[] = []
+            const newSamples: { name: string; description: string; audio: string; video_link: string }[] = []
             let newSampleIndex = 0
+            let existingSampleIndex = 0
 
             for (const sample of samples) {
                 if (sample.isExisting && sample.id) {
-                    existingSampleIds.push(sample.id)
+                    existingSamples.push({
+                        id: sample.id,
+                        name: sample.name,
+                        description: sample.description,
+                        audio: sample.audio,
+                        video_link: sample.videoLink,
+                    })
+                    if (sample.imageFile) {
+                        formData.append(`existing_sample_image_${existingSampleIndex}`, sample.imageFile)
+                    }
+                    existingSampleIndex++
                 } else {
-                    if (!sample.imageFile || !sample.audioFile) {
-                        setError(`Sample "${sample.name || `#${newSampleIndex + 1}`}": Image and audio are required`)
+                    if (!sample.imageFile) {
+                        setError(`Sample "${sample.name || `#${newSampleIndex + 1}`}": Image is required`)
                         setIsSubmitting(false)
                         return
                     }
-                    newSamples.push({ name: sample.name, description: sample.description })
+                    newSamples.push({
+                        name: sample.name,
+                        description: sample.description,
+                        audio: sample.audio,
+                        video_link: sample.videoLink,
+                    })
                     formData.append(`sample_image_${newSampleIndex}`, sample.imageFile)
-                    formData.append(`sample_audio_${newSampleIndex}`, sample.audioFile)
                     newSampleIndex++
                 }
             }
@@ -207,7 +210,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             formData.append('samples', JSON.stringify(newSamples))
 
             if (isEdit) {
-                formData.append('existing_sample_ids', JSON.stringify(existingSampleIds))
+                formData.append('existing_samples', JSON.stringify(existingSamples))
             }
 
             // Append metrics
@@ -321,7 +324,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             </div>
 
             {/* Samples Section */}
-            <div className="border-t pt-6">
+            <div className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Samples</h3>
                     <Button type="button" variant="outline" size="sm" onClick={addSample}>
@@ -350,7 +353,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                                 <Input
                                     value={sample.name}
                                     onChange={(e) => updateSample(index, 'name', e.target.value)}
-                                    disabled={isSubmitting || sample.isExisting}
+                                    disabled={isSubmitting}
                                     placeholder="e.g., Horsepower"
                                 />
                             </div>
@@ -359,48 +362,48 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                                 <Input
                                     value={sample.description}
                                     onChange={(e) => updateSample(index, 'description', e.target.value)}
-                                    disabled={isSubmitting || sample.isExisting}
+                                    disabled={isSubmitting}
                                 />
                             </div>
                         </div>
 
-                        {!sample.isExisting && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <div className="space-y-2">
-                                    <Label>Image *</Label>
-                                    <Input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => handleSampleImage(index, e)}
-                                        disabled={isSubmitting}
-                                    />
-                                    {sample.imagePreview && (
-                                        <img src={sample.imagePreview} alt="Preview" className="mt-1 max-h-20 rounded" />
-                                    )}
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Audio *</Label>
-                                    <Input
-                                        type="file"
-                                        accept="audio/*"
-                                        onChange={(e) => handleSampleAudio(index, e)}
-                                        disabled={isSubmitting}
-                                    />
-                                    {sample.audioName && (
-                                        <p className="text-xs text-gray-500 mt-1">{sample.audioName}</p>
-                                    )}
-                                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div className="space-y-2">
+                                <Label>{sample.isExisting ? 'Replace Image' : 'Image *'}</Label>
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleSampleImage(index, e)}
+                                    disabled={isSubmitting}
+                                />
+                                {sample.imagePreview && (
+                                    <img src={sample.imagePreview} alt="Preview" className="mt-1 max-h-20 rounded" />
+                                )}
                             </div>
-                        )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div className="space-y-2">
+                                <Label>Audio Path</Label>
+                                <Input
+                                    value={sample.audio}
+                                    onChange={(e) => updateSample(index, 'audio', e.target.value)}
+                                    disabled={isSubmitting}
+                                    placeholder="/audios/sample.wav"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Video Link</Label>
+                                <Input
+                                    value={sample.videoLink}
+                                    onChange={(e) => updateSample(index, 'videoLink', e.target.value)}
+                                    disabled={isSubmitting}
+                                    placeholder="/videos/sample.mp4"
+                                />
+                            </div>
+                        </div>
 
                         {sample.isExisting && (
-                            <div className="mt-2 flex gap-4 items-center">
-                                {sample.imagePreview && (
-                                    <img src={sample.imagePreview} alt={sample.name} className="h-16 w-16 rounded object-cover" />
-                                )}
-                                {sample.audioName && (
-                                    <span className="text-xs text-gray-500">Audio: {sample.audioName}</span>
-                                )}
+                            <div className="mt-2">
                                 <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Existing</span>
                             </div>
                         )}
@@ -409,7 +412,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             </div>
 
             {/* Metrics Section */}
-            <div className="border-t pt-6">
+            <div className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Metrics</h3>
                     <Button type="button" variant="outline" size="sm" onClick={addMetric}>

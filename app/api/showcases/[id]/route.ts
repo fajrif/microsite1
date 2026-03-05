@@ -101,14 +101,14 @@ export async function PUT(
             name: formData.get('name') as string,
             classification_id: formData.get('classification_id') as string,
             tagline: formData.get('tagline') as string,
-            description: (formData.get('description') as string) || null,
-            objective: (formData.get('objective') as string) || null,
-            solution: (formData.get('solution') as string) || null,
-            campaign_dates: (formData.get('campaign_dates') as string) || null,
-            market: (formData.get('market') as string) || null,
-            formats: (formData.get('formats') as string) || null,
-            source: (formData.get('source') as string) || null,
-            metrics_text: (formData.get('metrics_text') as string) || null,
+            description: (formData.get('description') as string) || undefined,
+            objective: (formData.get('objective') as string) || undefined,
+            solution: (formData.get('solution') as string) || undefined,
+            campaign_dates: (formData.get('campaign_dates') as string) || undefined,
+            market: (formData.get('market') as string) || undefined,
+            formats: (formData.get('formats') as string) || undefined,
+            source: (formData.get('source') as string) || undefined,
+            metrics_text: (formData.get('metrics_text') as string) || undefined,
         }
 
         const validatedData = showcaseSchema.parse(showcaseData)
@@ -128,13 +128,14 @@ export async function PUT(
             )
         }
 
-        // Handle samples: delete old, create new
+        // Handle samples
         const samplesJson = formData.get('samples') as string | null
         const samplesData = samplesJson ? JSON.parse(samplesJson) : []
 
-        // Parse existing sample IDs to keep
-        const existingSampleIds = formData.get('existing_sample_ids') as string | null
-        const keepSampleIds: string[] = existingSampleIds ? JSON.parse(existingSampleIds) : []
+        // Parse existing samples to update
+        const existingSamplesJson = formData.get('existing_samples') as string | null
+        const existingSamplesData: { id: string; name: string; description: string; audio: string; video_link: string }[] = existingSamplesJson ? JSON.parse(existingSamplesJson) : []
+        const keepSampleIds = existingSamplesData.map((s) => s.id)
 
         // Delete removed samples and their files
         for (const sample of current.samples) {
@@ -145,27 +146,51 @@ export async function PUT(
             }
         }
 
+        // Update existing samples
+        for (let i = 0; i < existingSamplesData.length; i++) {
+            const s = existingSamplesData[i]
+            const updateData: any = {
+                name: s.name,
+                description: s.description || null,
+                audio: s.audio || null,
+                video_link: s.video_link || null,
+            }
+
+            // Check if a new image was uploaded for this existing sample
+            const newImage = formData.get(`existing_sample_image_${i}`) as File | null
+            if (newImage && newImage.size > 0) {
+                // Delete old image
+                const oldSample = current.samples.find((cs) => cs.id === s.id)
+                if (oldSample) await deleteBlobIfExists(oldSample.image)
+                updateData.image = await uploadFile(newImage)
+            }
+
+            await prisma.sample.update({
+                where: { id: s.id },
+                data: updateData,
+            })
+        }
+
         // Create new samples
         for (let i = 0; i < samplesData.length; i++) {
             const sampleImage = formData.get(`sample_image_${i}`) as File | null
-            const sampleAudio = formData.get(`sample_audio_${i}`) as File | null
 
-            if (!sampleImage || sampleImage.size === 0 || !sampleAudio || sampleAudio.size === 0) {
+            if (!sampleImage || sampleImage.size === 0) {
                 return NextResponse.json(
-                    { error: `New sample ${i + 1}: Image and audio are required` },
+                    { error: `New sample ${i + 1}: Image is required` },
                     { status: 400 }
                 )
             }
 
             const imageUrl = await uploadFile(sampleImage)
-            const audioUrl = await uploadFile(sampleAudio)
 
             await prisma.sample.create({
                 data: {
                     name: samplesData[i].name,
                     description: samplesData[i].description || null,
                     image: imageUrl,
-                    audio: audioUrl,
+                    audio: samplesData[i].audio || null,
+                    video_link: samplesData[i].video_link || null,
                     showcase_id: params.id,
                 },
             })
@@ -206,8 +231,9 @@ export async function PUT(
         return NextResponse.json(showcase)
     } catch (error) {
         console.error('Error updating showcase:', error)
+        const message = error instanceof Error ? error.message : 'Failed to update showcase'
         return NextResponse.json(
-            { error: 'Failed to update showcase' },
+            { error: message },
             { status: 500 }
         )
     }

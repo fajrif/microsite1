@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Video, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ShowcaseSidebar } from '@/components/ShowcaseSidebar'
 
@@ -11,7 +11,8 @@ interface Sample {
     name: string
     description: string | null
     image: string
-    audio: string
+    audio: string | null
+    video_link: string | null
 }
 
 interface Metric {
@@ -58,12 +59,21 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
     const [activeSampleIndex, setActiveSampleIndex] = useState(0)
     const [isPlaying, setIsPlaying] = useState(false)
     const [progress, setProgress] = useState(0)
+    const videoRef = useRef<HTMLVideoElement>(null)
     const audioRef = useRef<HTMLAudioElement>(null)
     const activeSample = showcase.samples[activeSampleIndex]
+
+    const hasVideo = !!activeSample?.video_link
+    const hasAudio = !hasVideo && !!activeSample?.audio
+    const hasMedia = hasVideo || hasAudio
 
     useEffect(() => {
         setIsPlaying(false)
         setProgress(0)
+        if (videoRef.current) {
+            videoRef.current.pause()
+            videoRef.current.currentTime = 0
+        }
         if (audioRef.current) {
             audioRef.current.pause()
             audioRef.current.currentTime = 0
@@ -71,18 +81,27 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
     }, [activeSampleIndex])
 
     const togglePlay = () => {
-        if (!audioRef.current) return
-        if (isPlaying) {
-            audioRef.current.pause()
-        } else {
-            audioRef.current.play()
+        if (hasVideo && videoRef.current) {
+            if (isPlaying) {
+                videoRef.current.pause()
+            } else {
+                videoRef.current.play()
+            }
+            setIsPlaying(!isPlaying)
+        } else if (hasAudio && audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause()
+            } else {
+                audioRef.current.play()
+            }
+            setIsPlaying(!isPlaying)
         }
-        setIsPlaying(!isPlaying)
     }
 
     const handleTimeUpdate = () => {
-        if (!audioRef.current) return
-        const pct = (audioRef.current.currentTime / audioRef.current.duration) * 100
+        const el = hasVideo ? videoRef.current : audioRef.current
+        if (!el) return
+        const pct = (el.currentTime / el.duration) * 100
         setProgress(pct || 0)
     }
 
@@ -137,7 +156,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                             {/* Content Grid */}
                             <div className="mt-10 md:mt-16">
-                                {/* Samples + Audio Player */}
+                                {/* Samples + iPhone Player */}
                                 <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-8 md:pl-[100px]">
                                     {/* Left: Samples */}
                                     {showcase.samples.length > 0 && (
@@ -154,68 +173,94 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                     )}
                                                 >
                                                     <span>{sample.name}</span>
-                                                    <Volume2 className="h-3.5 w-3.5 shrink-0 ml-2" />
+                                                    {sample.video_link ? (
+                                                        <Play className="h-3.5 w-3.5 shrink-0 ml-2" />
+                                                    ) : (
+                                                        <Volume2 className="h-3.5 w-3.5 shrink-0 ml-2" />
+                                                    )}
                                                 </button>
                                             ))}
                                         </div>
                                     )}
 
-                                    {/* Right: Audio Player */}
+                                    {/* Right: Player */}
                                     {activeSample && (
-                                        <div className="bg-black/40 rounded-2xl overflow-hidden w-[220px] shrink-0">
-                                            <div className="relative w-full" style={{ aspectRatio: '9/14' }}>
-                                                <Image
-                                                    src={activeSample.image}
-                                                    alt={activeSample.name}
-                                                    fill
-                                                    className="object-cover"
-                                                    unoptimized
-                                                />
-                                            </div>
-
-                                            <div className="p-3">
-                                                <div className="w-full h-1 bg-white/20 rounded-full mb-3">
-                                                    <div
-                                                        className="h-full rounded-full transition-all duration-100"
-                                                        style={{
-                                                            width: `${progress}%`,
-                                                            backgroundColor: 'hsl(var(--ptr-primary))',
-                                                        }}
+                                        <div className="w-[220px] h-[440px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col" style={{ borderColor: 'hsl(var(--ptr-primary))' }}>
+                                            {/* Image / Video area */}
+                                            {hasVideo ? (
+                                                <div className="flex-1 relative overflow-hidden">
+                                                    <video
+                                                        ref={videoRef}
+                                                        src={activeSample.video_link!}
+                                                        poster={activeSample.image}
+                                                        onTimeUpdate={handleTimeUpdate}
+                                                        onEnded={handleEnded}
+                                                        playsInline
+                                                        className="absolute inset-0 w-full h-full object-cover"
                                                     />
                                                 </div>
-
-                                                <div className="flex items-center justify-center gap-5">
-                                                    <button
-                                                        onClick={prevSample}
-                                                        className="text-white/60 hover:text-white transition-colors"
-                                                    >
-                                                        <SkipBack className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={togglePlay}
-                                                        className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform shadow-md"
-                                                    >
-                                                        {isPlaying ? (
-                                                            <Pause className="h-4 w-4 text-black" />
-                                                        ) : (
-                                                            <Play className="h-4 w-4 text-black ml-0.5" />
-                                                        )}
-                                                    </button>
-                                                    <button
-                                                        onClick={nextSampleFn}
-                                                        className="text-white/60 hover:text-white transition-colors"
-                                                    >
-                                                        <SkipForward className="h-4 w-4" />
-                                                    </button>
+                                            ) : (
+                                                <div className="flex-1 flex items-center justify-center overflow-hidden p-3 pt-4">
+                                                    <div className="relative w-full" style={{ aspectRatio: '4/5' }}>
+                                                        <Image
+                                                            src={activeSample.image}
+                                                            alt={activeSample.name}
+                                                            fill
+                                                            className="object-contain rounded-sm"
+                                                            unoptimized
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
 
-                                            <audio
-                                                ref={audioRef}
-                                                src={activeSample.audio}
-                                                onTimeUpdate={handleTimeUpdate}
-                                                onEnded={handleEnded}
-                                            />
+                                            {/* Audio element (hidden) */}
+                                            {hasAudio && (
+                                                <audio
+                                                    ref={audioRef}
+                                                    src={activeSample.audio!}
+                                                    onTimeUpdate={handleTimeUpdate}
+                                                    onEnded={handleEnded}
+                                                />
+                                            )}
+
+                                            {/* Player controls area */}
+                                            {hasMedia && (
+                                                <div className="shrink-0 px-4 pb-4 pt-3">
+                                                    {/* Progress bar */}
+                                                    <div className="w-full h-[3px] bg-white/20 rounded-full mb-4">
+                                                        <div
+                                                            className="h-full rounded-full transition-all duration-100"
+                                                            style={{ width: `${progress}%`, backgroundColor: 'hsl(var(--ptr-primary))' }}
+                                                        />
+                                                    </div>
+
+                                                    {/* Controls */}
+                                                    <div className="flex items-center justify-center gap-6">
+                                                        <button
+                                                            onClick={prevSample}
+                                                            className="text-white/40 hover:text-white transition-colors"
+                                                        >
+                                                            <SkipBack className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={togglePlay}
+                                                            className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform shadow-md"
+                                                        >
+                                                            {isPlaying ? (
+                                                                <Pause className="h-4 w-4 text-black" />
+                                                            ) : (
+                                                                <Play className="h-4 w-4 text-black ml-0.5" />
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            onClick={nextSampleFn}
+                                                            className="text-white/40 hover:text-white transition-colors"
+                                                        >
+                                                            <SkipForward className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

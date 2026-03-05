@@ -19,6 +19,8 @@ export type ShowcaseFormData = z.infer<typeof showcaseSchema>
 export const sampleSchema = z.object({
     name: z.string().min(1, 'Sample name is required'),
     description: z.string().optional(),
+    audio: z.string().optional(),
+    video_link: z.string().optional(),
 })
 
 export type SampleFormData = z.infer<typeof sampleSchema>

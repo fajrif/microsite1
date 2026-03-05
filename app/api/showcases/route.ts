@@ -132,23 +132,22 @@ export async function POST(request: Request) {
         const sampleCreates = []
         for (let i = 0; i < samplesData.length; i++) {
             const sampleImage = formData.get(`sample_image_${i}`) as File | null
-            const sampleAudio = formData.get(`sample_audio_${i}`) as File | null
 
-            if (!sampleImage || sampleImage.size === 0 || !sampleAudio || sampleAudio.size === 0) {
+            if (!sampleImage || sampleImage.size === 0) {
                 return NextResponse.json(
-                    { error: `Sample ${i + 1}: Image and audio are required` },
+                    { error: `Sample ${i + 1}: Image is required` },
                     { status: 400 }
                 )
             }
 
             const imageUrl = await uploadFile(sampleImage)
-            const audioUrl = await uploadFile(sampleAudio)
 
             sampleCreates.push({
                 name: samplesData[i].name,
                 description: samplesData[i].description || null,
                 image: imageUrl,
-                audio: audioUrl,
+                audio: samplesData[i].audio || null,
+                video_link: samplesData[i].video_link || null,
             })
         }
 
