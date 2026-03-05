@@ -77,6 +77,8 @@
   --font-noto-sans: var(--font-noto-sans), sans-serif;
   --font-header: var(--font-noto-sans), sans-serif;
   --font-family-header: var(--font-noto-sans), sans-serif;
+  --font-spotify: var(--font-spotify-mix-wide), sans-serif;
+  --font-family-spotify: var(--font-spotify-mix-wide), sans-serif;
 }
 
 @layer components {

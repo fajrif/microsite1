@@ -95,7 +95,7 @@ export function Navigation() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden pb-4 bg-black text-sm text-white shadow-lg rounded-b-lg px-4 pt-2 mb-4">
+          <div className="md:hidden pb-4 bg-black text-base text-white font-spotify shadow-lg rounded-b-lg px-4 pt-2 mb-4">
             {treeData.length > 0 && (
               <TreeProvider
                 defaultExpandedIds={activeClassificationId ? [activeClassificationId] : []}
@@ -112,7 +112,7 @@ export function Navigation() {
                       isLast={cIdx === treeData.length - 1}
                     >
                       <TreeNodeTrigger className="hover:bg-white/10 rounded-xl px-2 py-1.5 mx-0">
-                        <TreeLabel className="text-sm font-bold uppercase tracking-widest text-white">
+                        <TreeLabel className="font-[900] tracking-widest text-white">
                           {classification.name}
                         </TreeLabel>
                         <TreeExpander hasChildren className="ml-auto" />

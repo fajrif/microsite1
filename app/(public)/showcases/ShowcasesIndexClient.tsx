@@ -35,25 +35,19 @@ export function ShowcasesIndexClient({ classifications }: ShowcasesIndexClientPr
             <div className="container mx-auto py-16 md:py-24 px-4">
                 {/* Headline */}
                 <GradualSpacing
-                    text="Set the stage with our five core"
-                    className="drop-shadow-sm font-display text-3xl md:text-5xl lg:text-6xl font-bold leading-none -tracking-widest text-[hsl(var(--ptr-primary))]"
-                />
-                <GradualSpacing
-                    text="creative best practices"
+                    text="五大创意类型最佳实"
                     className="drop-shadow-sm font-display text-3xl md:text-5xl lg:text-6xl font-bold leading-none -tracking-widest text-[hsl(var(--ptr-primary))]"
                 />
 
                 {/* Subtitle */}
                 <AnimatedDiv id="showcases-short-description" delay={0.1}>
                   <p className="mt-6 text-base md:text-lg text-white max-w-3xl leading-relaxed">
-                      Hear some of the best in-class audio and video campaigns created by global
-                      brands and agencies that delivered impactful storytelling to reach the right
-                      audience, in the right way, at the right moment.
+                      解析顶尖品牌与代理商联手打造的音视频广告标杆案例，看他们如何以故事打动人心，选择正确时间与方式，精准触达目标受众。
                   </p>
                 </AnimatedDiv>
 
                 {/* Classification Cards */}
-                <AnimatedDiv id="showcases-grid" className="mt-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8 w-full" delay={0.3}>
+                <AnimatedDiv id="showcases-grid" className="mt-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-4 w-full" delay={0.3}>
                     {classifications.map((classification) => (
                         <button
                             key={classification.id}
@@ -83,13 +77,13 @@ export function ShowcasesIndexClient({ classifications }: ShowcasesIndexClientPr
                                     />
                                 ) : (
                                     <div className="w-full h-full bg-white/10 flex items-center justify-center text-white/40 text-sm">
-                                        No Image
+                                        无图像
                                     </div>
                                 )}
                             </div>
                             <p
                                 className={cn(
-                                    'mt-3 text-lg md:text-xl font-bold transition-colors duration-300',
+                                    'mt-3 text-base font-spotify font-[900] transition-colors duration-300',
                                     classification.showcases.length === 0
                                         ? 'text-white'
                                         : 'text-white group-hover:text-[hsl(var(--ptr-primary))]'

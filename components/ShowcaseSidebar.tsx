@@ -34,7 +34,7 @@ export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
     )?.id
 
     return (
-        <nav className="hidden md:block w-52 flex-shrink-0">
+        <nav className="hidden md:block w-52 flex-shrink-0 font-spotify">
             <Link
                 href="/showcases"
                 className="flex items-center gap-1 text-xs text-white/80 hover:text-white transition-colors uppercase tracking-widest mb-4"
@@ -58,7 +58,7 @@ export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
                             isLast={cIdx === classifications.length - 1}
                         >
                             <TreeNodeTrigger className="hover:bg-white/10 rounded-xl px-2 py-1.5 mx-0">
-                                <TreeLabel className="text-sm font-bold uppercase tracking-wider text-white">
+                                <TreeLabel className="text-base font-[900] tracking-wider text-white">
                                     {classification.name}
                                 </TreeLabel>
                                 <TreeExpander hasChildren className="ml-auto" />

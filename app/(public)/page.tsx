@@ -37,20 +37,20 @@ export default function HomePage() {
         />
         <div className="text-center max-w-3xl mb-10">
           <div className="drop-shadow-sm font-display text-3xl md:text-5xl lg:text-5xl font-bold leading-none --tracking-widest text-[hsl(var(--ptr-primary))] mb-2">
-            Turning Spotify Creativity into Success Stories:
+            巧用 Spotify 平台创作成功故事：
           </div>
           <div className="drop-shadow-sm font-display text-3xl md:text-5xl lg:text-5xl font-light leading-none --tracking-widest text-[hsl(var(--ptr-primary))] mb-6 md:mb-10">
-            An Interactive Walk-Through
+            您的互动营销指南
           </div>
           <p className="text-xl md:text-2xl text-white leading-relaxed">
-            Grab your headphones & get inspired today
+            赶快戴上耳机，灵感即刻涌现
           </p>
         </div>
         <ShinyButton
             href="/showcases"
             className={`text-white rounded-4xl text-base py-3 mb-12 md:mb-16`}
         >
-           LET’S START! 
+          马上开始！
         </ShinyButton>
       </motion.div>
     </div>

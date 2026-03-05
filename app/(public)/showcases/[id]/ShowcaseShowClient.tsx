@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { Play, Pause, SkipBack, SkipForward, Video, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ShowcaseSidebar } from '@/components/ShowcaseSidebar'
+import { GradualSpacing } from '@/components/ui/gradual-spacing'
+import { AnimatedDiv } from "@/components/ui/animated-div"
 
 interface Sample {
     id: string
@@ -142,171 +144,178 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                         {/* Right: Main content */}
                         <div className="flex-1 min-w-0">
-                            {/* Classification Label */}
-                            <p className="text-sm font-semibold uppercase text-white tracking-wider mb-3">
-                                {showcase.classification.name}
-                            </p>
+                            <div className="max-w-3xl">
+                                {/* Classification Label */}
+                                <p className="text-sm font-[900] text-white tracking-wider mb-3 font-spotify">
+                                    {showcase.classification.name}
+                                </p>
 
-                            {/* Tagline */}
-                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-none max-w-3xl"
-                                style={{ color: 'hsl(var(--ptr-primary))' }}
-                            >
-                                {showcase.tagline}
-                            </h1>
+                                {/* Tagline */}
+                                <GradualSpacing
+                                    text={showcase.tagline}
+                                    className="drop-shadow-sm font-display text-3xl md:text-4xl lg:text-6xl font-bold leading-tight -tracking-widest text-[hsl(var(--ptr-primary))]"
+                                />
+                            </div>
 
                             {/* Content Grid */}
                             <div className="mt-10 md:mt-16">
-                                {/* Samples + iPhone Player */}
-                                <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-8 md:pl-[100px]">
-                                    {/* Left: Samples */}
-                                    {showcase.samples.length > 0 && (
-                                        <div className="flex flex-col space-y-2 w-44 shrink-0">
-                                            {showcase.samples.map((sample, index) => (
-                                                <button
-                                                    key={sample.id}
-                                                    onClick={() => setActiveSampleIndex(index)}
-                                                    className={cn(
-                                                        'flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-xs font-medium transition-all duration-300',
-                                                        index === activeSampleIndex
-                                                            ? 'bg-[hsl(var(--ptr-primary))] text-primary'
-                                                            : 'bg-white/10 text-white hover:bg-white/20'
-                                                    )}
-                                                >
-                                                    <span>{sample.name}</span>
-                                                    {sample.video_link ? (
-                                                        <Play className="h-3.5 w-3.5 shrink-0 ml-2" />
-                                                    ) : (
-                                                        <Volume2 className="h-3.5 w-3.5 shrink-0 ml-2" />
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Right: Player */}
-                                    {activeSample && (
-                                        <div className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col" style={{ borderColor: 'hsl(var(--ptr-primary))' }}>
-                                            {hasVideo ? (
-                                                /* VIDEO: full-height with centered play overlay */
-                                                <div className="relative w-full h-full">
-                                                    <video
-                                                        ref={videoRef}
-                                                        src={activeSample.video_link!}
-                                                        poster={activeSample.image}
-                                                        onTimeUpdate={handleTimeUpdate}
-                                                        onEnded={handleEnded}
-                                                        playsInline
-                                                        className="absolute inset-0 w-full h-full object-cover"
-                                                    />
-                                                    {/* Centered play/pause overlay */}
+                                <AnimatedDiv id="showcases-video-player" delay={0.1}>
+                                    {/* Samples + iPhone Player */}
+                                    <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-8 md:pl-[100px]">
+                                        {/* Left: Samples */}
+                                        {showcase.samples.length > 0 && (
+                                            <div className="flex flex-col space-y-2 w-44 shrink-0">
+                                                {showcase.samples.map((sample, index) => (
                                                     <button
-                                                        onClick={togglePlay}
-                                                        className="absolute inset-0 flex items-center justify-center z-10 group"
+                                                        key={sample.id}
+                                                        onClick={() => setActiveSampleIndex(index)}
+                                                        className={cn(
+                                                            'flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-xs font-medium transition-all duration-300',
+                                                            index === activeSampleIndex
+                                                                ? 'bg-[hsl(var(--ptr-primary))] text-primary'
+                                                                : 'bg-white/10 text-white hover:bg-white/20'
+                                                        )}
                                                     >
-                                                        <div className={cn(
-                                                            'w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center transition-all duration-300',
-                                                            isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
-                                                        )}>
-                                                            {isPlaying ? (
-                                                                <Pause className="h-6 w-6 text-white" />
-                                                            ) : (
-                                                                <Play className="h-6 w-6 text-white ml-0.5" />
-                                                            )}
-                                                        </div>
+                                                        <span>{sample.name}</span>
+                                                        {sample.video_link ? (
+                                                            <Play className="h-3.5 w-3.5 shrink-0 ml-2" />
+                                                        ) : (
+                                                            <Volume2 className="h-3.5 w-3.5 shrink-0 ml-2" />
+                                                        )}
                                                     </button>
-                                                </div>
-                                            ) : (
-                                                /* AUDIO: image + bottom player controls */
-                                                <>
-                                                    <div className="flex-1 flex items-center justify-center overflow-hidden p-3 pt-4">
-                                                        <div className="relative w-full" style={{ aspectRatio: '4/5' }}>
-                                                            <Image
-                                                                src={activeSample.image}
-                                                                alt={activeSample.name}
-                                                                fill
-                                                                className="object-contain rounded-sm"
-                                                                unoptimized
-                                                            />
-                                                        </div>
-                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
 
-                                                    {/* Audio element (hidden) */}
-                                                    {hasAudio && (
-                                                        <audio
-                                                            ref={audioRef}
-                                                            src={activeSample.audio!}
+                                        {/* Right: Player */}
+                                        {activeSample && (
+                                            <div className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col" style={{ borderColor: 'hsl(var(--ptr-primary))' }}>
+                                                {hasVideo ? (
+                                                    /* VIDEO: full-height with centered play overlay */
+                                                    <div className="relative w-full h-full">
+                                                        <video
+                                                            ref={videoRef}
+                                                            src={activeSample.video_link!}
+                                                            poster={activeSample.image}
                                                             onTimeUpdate={handleTimeUpdate}
                                                             onEnded={handleEnded}
+                                                            playsInline
+                                                            className="absolute inset-0 w-full h-full object-cover"
                                                         />
-                                                    )}
-
-                                                    {/* Player controls — audio only */}
-                                                    {hasAudio && (
-                                                        <div className="shrink-0 px-4 pb-4 pt-3">
-                                                            {/* Progress bar */}
-                                                            <div className="w-full h-[3px] bg-white/20 rounded-full mb-4">
-                                                                <div
-                                                                    className="h-full rounded-full transition-all duration-100"
-                                                                    style={{ width: `${progress}%`, backgroundColor: 'hsl(var(--ptr-primary))' }}
+                                                        {/* Centered play/pause overlay */}
+                                                        <button
+                                                            onClick={togglePlay}
+                                                            className="absolute inset-0 flex items-center justify-center z-10 group"
+                                                        >
+                                                            <div className={cn(
+                                                                'w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center transition-all duration-300',
+                                                                isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
+                                                            )}>
+                                                                {isPlaying ? (
+                                                                    <Pause className="h-6 w-6 text-white" />
+                                                                ) : (
+                                                                    <Play className="h-6 w-6 text-white ml-0.5" />
+                                                                )}
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    /* AUDIO: image + bottom player controls */
+                                                    <>
+                                                        <div className="flex-1 flex items-center justify-center overflow-hidden p-3 pt-4">
+                                                            <div className="relative w-full" style={{ aspectRatio: '4/5' }}>
+                                                                <Image
+                                                                    src={activeSample.image}
+                                                                    alt={activeSample.name}
+                                                                    fill
+                                                                    className="object-contain rounded-sm"
+                                                                    unoptimized
                                                                 />
                                                             </div>
-
-                                                            {/* Controls */}
-                                                            <div className="flex items-center justify-center gap-6">
-                                                                <button
-                                                                    onClick={prevSample}
-                                                                    className="text-white/40 hover:text-white transition-colors"
-                                                                >
-                                                                    <SkipBack className="h-4 w-4" />
-                                                                </button>
-                                                                <button
-                                                                    onClick={togglePlay}
-                                                                    className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform shadow-md"
-                                                                >
-                                                                    {isPlaying ? (
-                                                                        <Pause className="h-4 w-4 text-black" />
-                                                                    ) : (
-                                                                        <Play className="h-4 w-4 text-black ml-0.5" />
-                                                                    )}
-                                                                </button>
-                                                                <button
-                                                                    onClick={nextSampleFn}
-                                                                    className="text-white/40 hover:text-white transition-colors"
-                                                                >
-                                                                    <SkipForward className="h-4 w-4" />
-                                                                </button>
-                                                            </div>
                                                         </div>
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
+
+                                                        {/* Audio element (hidden) */}
+                                                        {hasAudio && (
+                                                            <audio
+                                                                ref={audioRef}
+                                                                src={activeSample.audio!}
+                                                                onTimeUpdate={handleTimeUpdate}
+                                                                onEnded={handleEnded}
+                                                            />
+                                                        )}
+
+                                                        {/* Player controls — audio only */}
+                                                        {hasAudio && (
+                                                            <div className="shrink-0 px-4 pb-4 pt-3">
+                                                                {/* Progress bar */}
+                                                                <div className="w-full h-[3px] bg-white/20 rounded-full mb-4">
+                                                                    <div
+                                                                        className="h-full rounded-full transition-all duration-100"
+                                                                        style={{ width: `${progress}%`, backgroundColor: 'hsl(var(--ptr-primary))' }}
+                                                                    />
+                                                                </div>
+
+                                                                {/* Controls */}
+                                                                <div className="flex items-center justify-center gap-6">
+                                                                    <button
+                                                                        onClick={prevSample}
+                                                                        className="text-white/40 hover:text-white transition-colors"
+                                                                    >
+                                                                        <SkipBack className="h-4 w-4" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={togglePlay}
+                                                                        className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform shadow-md"
+                                                                    >
+                                                                        {isPlaying ? (
+                                                                            <Pause className="h-4 w-4 text-black" />
+                                                                        ) : (
+                                                                            <Play className="h-4 w-4 text-black ml-0.5" />
+                                                                        )}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={nextSampleFn}
+                                                                        className="text-white/40 hover:text-white transition-colors"
+                                                                    >
+                                                                        <SkipForward className="h-4 w-4" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </AnimatedDiv>
 
                                 {/* Objective & Solution */}
                                 <div className="space-y-8 max-w-4xl mt-16">
-                                    {showcase.objective && (
-                                        <div>
-                                            <h2 className="text-lg font-bold text-white mb-2">
-                                                The Objective
-                                            </h2>
-                                            <p className="text-sm md:text-base font-light text-white leading-relaxed">
-                                                {showcase.objective}
-                                            </p>
-                                        </div>
-                                    )}
+                                    <AnimatedDiv id="showcases-objective" delay={0.2}>
+                                        {showcase.objective && (
+                                            <div>
+                                                <h2 className="text-lg font-bold text-white mb-2">
+                                                    营销目标
+                                                </h2>
+                                                <p className="text-sm md:text-base font-light text-white leading-relaxed">
+                                                    {showcase.objective}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </AnimatedDiv>
 
-                                    {showcase.solution && (
-                                        <div>
-                                            <h2 className="text-lg font-bold text-white mb-2">
-                                                The Solution
-                                            </h2>
-                                            <p className="text-sm md:text-base font-light text-white leading-relaxed">
-                                                {showcase.solution}
-                                            </p>
-                                        </div>
-                                    )}
+                                    <AnimatedDiv id="showcases-objective" delay={0.3}>
+                                        {showcase.solution && (
+                                            <div>
+                                                <h2 className="text-lg font-bold text-white mb-2">
+                                                    解决方案
+                                                </h2>
+                                                <p className="text-sm md:text-base font-light text-white leading-relaxed">
+                                                    {showcase.solution}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </AnimatedDiv>
                                 </div>
                             </div>
 
@@ -317,17 +326,17 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                         {showcase.metrics.map((metric) => (
                                             <div key={metric.id}>
                                                 {!metric.hide_name && (
-                                                    <p className="text-xs md:text-sm font-bold uppercase tracking-wider mb-1">
+                                                    <p className="text-sm md:text-base font-bold uppercase tracking-wider mb-1">
                                                         {metric.name}
                                                     </p>
                                                 )}
-                                                <p className="text-4xl md:text-6xl font-bold"
+                                                <p className="text-4xl md:text-6xl font-spotify font-[900]"
                                                     style={{ color: 'hsl(var(--ptr-primary))' }}
                                                 >
                                                     {formatValue(metric)}
                                                 </p>
                                                 {metric.short_description && (
-                                                    <p className="mt-1 text-sm">
+                                                    <p className="mt-1 text-sm md:text-base">
                                                         {metric.short_description}
                                                     </p>
                                                 )}
@@ -339,8 +348,8 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                             {/* Campaign Details */}
                             {(showcase.campaign_dates || showcase.market || showcase.formats || showcase.source) && (
-                                <div className="mt-10 pt-6 border-t border-white/10">
-                                    <p className="text-sm font-light text-white/80 leading-relaxed">
+                                <div className="mt-10 pt-6 font-spotify font-bold">
+                                    <p className="text-base text-white leading-relaxed">
                                         {[
                                             showcase.campaign_dates ? `Campaign dates: ${showcase.campaign_dates}` : null,
                                             showcase.formats ? `Formats: ${showcase.formats}` : null,
@@ -351,13 +360,13 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                 <span key={i}>
                                                     <strong className="font-bold">{item!.split(': ')[0]}: </strong>
                                                     {item!.split(': ').slice(1).join(': ')}
-                                                    {i < arr.length - 1 && <span className="mx-2 text-white/30">|</span>}
+                                                    {i < arr.length - 1 && <span className="mx-2 text-white">|</span>}
                                                 </span>
                                             ))
                                         }
                                     </p>
                                     {showcase.source && (
-                                        <p className="text-sm font-light text-white/80 mt-1">
+                                        <p className="text-base text-white mt-1">
                                             <strong className="font-bold">Source: </strong>{showcase.source}
                                         </p>
                                     )}
