@@ -145,7 +145,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                         {/* Right: Main content */}
                         <div className="flex-1 min-w-0">
-                            <div className="max-w-3xl">
+                            <div className="max-w-4xl">
                                 {/* Classification Label */}
                                 <p className="text-sm font-[900] text-white tracking-wider mb-3 font-spotify">
                                     {showcase.classification.name}
@@ -300,7 +300,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                 </AnimatedDiv>
 
                                 {/* Objective & Solution */}
-                                <div className="space-y-8 max-w-4xl mt-16">
+                                <div className="space-y-8 max-w-3xl mt-16">
                                     <AnimatedDiv id="showcases-objective" delay={0.2}>
                                         {showcase.objective && (
                                             <div>
