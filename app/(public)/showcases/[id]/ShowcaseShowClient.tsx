@@ -340,7 +340,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                         {metric.name}
                                                     </p>
                                                 )}
-                                                <p className="text-4xl md:text-6xl font-spotify font-[900]"
+                                                <p className="text-5xl md:text-6xl font-spotify font-[900]"
                                                     style={{ color: 'hsl(var(--ptr-primary))' }}
                                                 >
                                                     {formatValue(metric)}
