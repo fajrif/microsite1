@@ -20,7 +20,7 @@ import {
 interface ClassificationWithShowcases {
   id: string
   name: string
-  showcases: { id: string; name: string }[]
+  showcases: { id: string; name: string; slug: string }[]
 }
 
 export function Navigation() {
@@ -34,7 +34,7 @@ export function Navigation() {
   const currentShowcaseId = isShowcaseDetail ? pathname.split('/').pop() ?? '' : ''
 
   const activeClassificationId = treeData.find((c) =>
-    c.showcases.some((s) => s.id === currentShowcaseId)
+    c.showcases.some((s) => s.slug === currentShowcaseId)
   )?.id
 
   useEffect(() => {
@@ -128,12 +128,12 @@ export function Navigation() {
                             <TreeNodeTrigger
                               className={cn(
                                 'mt-1 rounded-xl px-2 py-1.5 mx-0',
-                                showcase.id === currentShowcaseId
+                                showcase.slug === currentShowcaseId
                                   ? 'bg-[hsl(var(--ptr-primary))] text-primary font-medium hover:bg-[hsl(var(--ptr-primary))]'
                                   : 'text-white/70 hover:text-white hover:bg-white/10'
                               )}
                               onClick={() => {
-                                router.push(`/showcases/${showcase.id}`)
+                                router.push(`/showcases/${showcase.slug}`)
                                 setIsOpen(false)
                               }}
                             >
@@ -141,7 +141,7 @@ export function Navigation() {
                               <TreeIcon
                                 icon={<Volume2 className="h-3.5 w-3.5" />}
                                 className={
-                                  showcase.id === currentShowcaseId
+                                  showcase.slug === currentShowcaseId
                                     ? 'text-primary'
                                     : 'text-white'
                                 }
@@ -149,7 +149,7 @@ export function Navigation() {
                               <TreeLabel
                                 className={cn(
                                   'text-sm',
-                                  showcase.id === currentShowcaseId
+                                  showcase.slug === currentShowcaseId
                                     ? 'text-primary font-medium'
                                     : 'text-white'
                                 )}

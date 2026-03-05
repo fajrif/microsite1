@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { showcaseSchema } from '@/lib/validations/showcase'
 import { put } from '@vercel/blob'
+import { generateSlug } from '@/lib/slug'
 
 async function uploadFile(file: File): Promise<string> {
     if (process.env.BLOB_READ_WRITE_TOKEN) {
@@ -60,7 +61,7 @@ export async function GET(request: Request) {
                     select: { samples: true, metrics: true },
                 },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { orderNo: 'asc' },
             skip: (page - 1) * limit,
             take: limit,
         })
@@ -106,6 +107,7 @@ export async function POST(request: Request) {
             formats: (formData.get('formats') as string) || undefined,
             source: (formData.get('source') as string) || undefined,
             metrics_text: (formData.get('metrics_text') as string) || undefined,
+            orderNo: formData.get('orderNo') ? parseInt(formData.get('orderNo') as string) || 0 : 0,
         }
 
         const validatedData = showcaseSchema.parse(showcaseData)
@@ -122,6 +124,14 @@ export async function POST(request: Request) {
                 { error: 'Showcase name already exists' },
                 { status: 400 }
             )
+        }
+
+        // Generate unique slug
+        let slug = generateSlug(validatedData.name)
+        let slugSuffix = 2
+        while (await prisma.showcase.findUnique({ where: { slug } })) {
+            slug = `${generateSlug(validatedData.name)}-${slugSuffix}`
+            slugSuffix++
         }
 
         // Parse samples from form data
@@ -148,6 +158,7 @@ export async function POST(request: Request) {
                 image: imageUrl,
                 audio: samplesData[i].audio || null,
                 video_link: samplesData[i].video_link || null,
+                orderNo: samplesData[i].orderNo ?? 0,
             })
         }
 
@@ -163,12 +174,14 @@ export async function POST(request: Request) {
             value: parseFloat(m.value),
             suffix: m.suffix || null,
             hide_name: m.hide_name || false,
+            orderNo: m.orderNo ?? 0,
         }))
 
         // Create showcase with relations in transaction
         const showcase = await prisma.showcase.create({
             data: {
                 ...validatedData,
+                slug,
                 samples: {
                     create: sampleCreates,
                 },

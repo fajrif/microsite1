@@ -14,6 +14,7 @@ interface Showcase {
     id: string
     name: string
     tagline: string
+    orderNo: number
     classification: { id: string; name: string }
     _count: { samples: number; metrics: number }
     createdAt: Date

@@ -28,7 +28,7 @@ export async function GET(request: Request) {
         if (all === 'true') {
             const classifications = await prisma.classification.findMany({
                 where,
-                orderBy: { name: 'asc' },
+                orderBy: { orderNo: 'asc' },
             })
             return NextResponse.json({ classifications })
         }
@@ -41,11 +41,11 @@ export async function GET(request: Request) {
                     id: true,
                     name: true,
                     showcases: {
-                        select: { id: true, name: true },
-                        orderBy: { createdAt: 'asc' },
+                        select: { id: true, name: true, slug: true },
+                        orderBy: { orderNo: 'asc' },
                     },
                 },
-                orderBy: { createdAt: 'asc' },
+                orderBy: { orderNo: 'asc' },
             })
             return NextResponse.json({ classifications })
         }
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
         // Get paginated classifications
         const classifications = await prisma.classification.findMany({
             where,
-            orderBy: { name: 'asc' },
+            orderBy: { orderNo: 'asc' },
             skip: (page - 1) * limit,
             take: limit,
             include: {
@@ -121,6 +121,7 @@ export async function POST(request: Request) {
         const data = {
             name: formData.get('name') as string,
             description: (formData.get('description') as string) || undefined,
+            orderNo: parseInt(formData.get('orderNo') as string || '0') || 0,
         }
 
         const validatedData = classificationSchema.parse(data)

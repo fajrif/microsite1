@@ -5,7 +5,7 @@ import { ShowcaseShowClient } from './ShowcaseShowClient'
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const showcase = await prisma.showcase.findUnique({
-        where: { id },
+        where: { slug: id },
         select: { name: true, tagline: true },
     })
 
@@ -25,11 +25,11 @@ export default async function ShowcaseDetailPage({
     const { id } = await params
 
     const showcase = await prisma.showcase.findUnique({
-        where: { id },
+        where: { slug: id },
         include: {
             classification: true,
-            samples: true,
-            metrics: true,
+            samples: { orderBy: { orderNo: 'asc' } },
+            metrics: { orderBy: { orderNo: 'asc' } },
         },
     })
 
@@ -40,11 +40,11 @@ export default async function ShowcaseDetailPage({
             id: true,
             name: true,
             showcases: {
-                select: { id: true, name: true },
-                orderBy: { createdAt: 'asc' },
+                select: { id: true, name: true, slug: true },
+                orderBy: { orderNo: 'asc' },
             },
         },
-        orderBy: { id: 'asc' },
+        orderBy: { orderNo: 'asc' },
     })
 
     return (

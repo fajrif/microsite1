@@ -17,7 +17,7 @@ import {
 interface ClassificationWithShowcases {
     id: string
     name: string
-    showcases: { id: string; name: string }[]
+    showcases: { id: string; name: string; slug: string }[]
 }
 
 interface Props {
@@ -30,7 +30,7 @@ export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
 
     // Find which classification contains the current showcase so we can expand it by default
     const activeClassificationId = classifications.find((c) =>
-        c.showcases.some((s) => s.id === currentShowcaseId)
+        c.showcases.some((s) => s.slug === currentShowcaseId)
     )?.id
 
     return (
@@ -73,24 +73,24 @@ export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
                                     >
                                         <TreeNodeTrigger
                                             className={
-                                                showcase.id === currentShowcaseId
+                                                showcase.slug === currentShowcaseId
                                                     ? 'mt-2 bg-[hsl(var(--ptr-primary))] text-primary font-medium hover:bg-[hsl(var(--ptr-primary))] rounded-xl px-2 py-1.5 mx-0'
                                                     : 'mt-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl px-2 py-1.5 mx-0'
                                             }
-                                            onClick={() => router.push(`/showcases/${showcase.id}`)}
+                                            onClick={() => router.push(`/showcases/${showcase.slug}`)}
                                         >
                                             <TreeExpander />
                                             <TreeIcon
                                                 icon={<Volume2 className="h-3.5 w-3.5" />}
                                                 className={
-                                                    showcase.id === currentShowcaseId
+                                                    showcase.slug === currentShowcaseId
                                                         ? 'text-primary'
                                                         : 'text-white/50'
                                                 }
                                             />
                                             <TreeLabel
                                                 className={
-                                                    showcase.id === currentShowcaseId
+                                                    showcase.slug === currentShowcaseId
                                                         ? 'text-sm text-primary font-medium'
                                                         : 'text-sm text-white/70'
                                                 }

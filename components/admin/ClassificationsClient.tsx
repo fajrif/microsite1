@@ -15,6 +15,7 @@ interface Classification {
     name: string
     description: string | null
     image: string | null
+    orderNo: number
     createdAt: Date
     updatedAt: Date
     _count?: { showcases: number }

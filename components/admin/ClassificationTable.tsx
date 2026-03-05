@@ -36,6 +36,7 @@ interface Classification {
     name: string
     description: string | null
     image: string | null
+    orderNo: number
     createdAt: Date
     updatedAt: Date
     _count?: { showcases: number }
@@ -79,6 +80,7 @@ export function ClassificationTable({ classifications, isLoading, onEdit, onDele
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Order</TableHead>
                             <TableHead>Image</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Showcases</TableHead>
@@ -89,13 +91,16 @@ export function ClassificationTable({ classifications, isLoading, onEdit, onDele
                     <TableBody>
                         {classifications.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center text-gray-500 py-8">
+                                <TableCell colSpan={6} className="text-center text-gray-500 py-8">
                                     No classifications found
                                 </TableCell>
                             </TableRow>
                         ) : (
                             classifications.map((classification) => (
                                 <TableRow key={classification.id}>
+                                    <TableCell className="text-gray-600 font-mono text-sm">
+                                        {classification.orderNo}
+                                    </TableCell>
                                     <TableCell>
                                         {classification.image ? (
                                             <img

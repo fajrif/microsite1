@@ -26,9 +26,10 @@ export async function GET(
             where: { id: params.id },
             include: {
                 showcases: {
+                    orderBy: { orderNo: 'asc' },
                     include: {
-                        samples: true,
-                        metrics: true,
+                        samples: { orderBy: { orderNo: 'asc' } },
+                        metrics: { orderBy: { orderNo: 'asc' } },
                     },
                 },
             },
@@ -102,6 +103,7 @@ export async function PUT(
         const data = {
             name: formData.get('name') as string,
             description: (formData.get('description') as string) || undefined,
+            orderNo: parseInt(formData.get('orderNo') as string || '0') || 0,
         }
 
         const validatedData = classificationSchema.parse(data)

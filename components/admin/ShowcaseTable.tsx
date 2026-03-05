@@ -36,6 +36,7 @@ interface Showcase {
     id: string
     name: string
     tagline: string
+    orderNo: number
     classification: { id: string; name: string }
     _count: { samples: number; metrics: number }
     createdAt: Date
@@ -78,6 +79,7 @@ export function ShowcaseTable({ showcases, isLoading, onDelete }: ShowcaseTableP
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Order</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Classification</TableHead>
                             <TableHead>Samples</TableHead>
@@ -89,13 +91,16 @@ export function ShowcaseTable({ showcases, isLoading, onDelete }: ShowcaseTableP
                     <TableBody>
                         {showcases.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                                <TableCell colSpan={7} className="text-center text-gray-500 py-8">
                                     No showcases found
                                 </TableCell>
                             </TableRow>
                         ) : (
                             showcases.map((showcase) => (
                                 <TableRow key={showcase.id}>
+                                    <TableCell className="text-gray-600 font-mono text-sm">
+                                        {showcase.orderNo}
+                                    </TableCell>
                                     <TableCell className="font-medium max-w-[200px]">
                                         <Link
                                             href={`/admin/showcases/${showcase.id}/edit`}

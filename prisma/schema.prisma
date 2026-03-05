@@ -107,10 +107,11 @@ model Inquiry {
 }
 
 model Classification {
-  id          String     @id @default(uuid())
+  id          String     @id @default(uuid()) @db.Uuid
   name        String     @unique
   description String?
   image       String?
+  orderNo     Int        @default(0)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   showcases   Showcase[]
@@ -119,9 +120,10 @@ model Classification {
 }
 
 model Showcase {
-  id                String         @id @default(uuid())
+  id                String         @id @default(uuid()) @db.Uuid
+  slug              String         @unique
   name              String         @unique
-  classification_id String
+  classification_id String         @db.Uuid
   description       String?
   tagline           String
   objective         String?
@@ -131,6 +133,7 @@ model Showcase {
   formats           String?
   source            String?
   metrics_text      String?
+  orderNo           Int            @default(0)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
@@ -142,13 +145,14 @@ model Showcase {
 }
 
 model Sample {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   name        String   @unique
   description String?
-  showcase_id String
+  showcase_id String   @db.Uuid
   image       String
   audio       String?
   video_link  String?
+  orderNo     Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -158,8 +162,8 @@ model Sample {
 }
 
 model Metric {
-  id                String   @id @default(uuid())
-  showcase_id       String
+  id                String   @id @default(uuid()) @db.Uuid
+  showcase_id       String   @db.Uuid
   name              String
   short_description String?
   caption           String?
@@ -167,6 +171,7 @@ model Metric {
   value             Float
   suffix            String?
   hide_name         Boolean  @default(false)
+  orderNo           Int      @default(0)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

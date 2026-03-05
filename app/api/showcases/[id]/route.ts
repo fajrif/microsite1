@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { showcaseSchema } from '@/lib/validations/showcase'
 import { put, del } from '@vercel/blob'
+import { generateSlug } from '@/lib/slug'
 
 async function deleteBlobIfExists(url: string | null | undefined) {
     if (url && url.includes('blob.vercel-storage.com')) {
@@ -47,8 +48,8 @@ export async function GET(
             where: { id: params.id },
             include: {
                 classification: true,
-                samples: true,
-                metrics: true,
+                samples: { orderBy: { orderNo: 'asc' } },
+                metrics: { orderBy: { orderNo: 'asc' } },
             },
         })
 
@@ -109,6 +110,7 @@ export async function PUT(
             formats: (formData.get('formats') as string) || undefined,
             source: (formData.get('source') as string) || undefined,
             metrics_text: (formData.get('metrics_text') as string) || undefined,
+            orderNo: formData.get('orderNo') ? parseInt(formData.get('orderNo') as string) || 0 : 0,
         }
 
         const validatedData = showcaseSchema.parse(showcaseData)
@@ -128,13 +130,29 @@ export async function PUT(
             )
         }
 
+        // Regenerate slug if name changed
+        let slugUpdate: { slug?: string } = {}
+        if (validatedData.name !== current.name) {
+            let slug = generateSlug(validatedData.name)
+            let slugSuffix = 2
+            while (true) {
+                const slugExists = await prisma.showcase.findFirst({
+                    where: { slug, NOT: { id: params.id } },
+                })
+                if (!slugExists) break
+                slug = `${generateSlug(validatedData.name)}-${slugSuffix}`
+                slugSuffix++
+            }
+            slugUpdate = { slug }
+        }
+
         // Handle samples
         const samplesJson = formData.get('samples') as string | null
         const samplesData = samplesJson ? JSON.parse(samplesJson) : []
 
         // Parse existing samples to update
         const existingSamplesJson = formData.get('existing_samples') as string | null
-        const existingSamplesData: { id: string; name: string; description: string; audio: string; video_link: string }[] = existingSamplesJson ? JSON.parse(existingSamplesJson) : []
+        const existingSamplesData: { id: string; name: string; description: string; audio: string; video_link: string; orderNo?: number }[] = existingSamplesJson ? JSON.parse(existingSamplesJson) : []
         const keepSampleIds = existingSamplesData.map((s) => s.id)
 
         // Delete removed samples and their files
@@ -154,6 +172,7 @@ export async function PUT(
                 description: s.description || null,
                 audio: s.audio || null,
                 video_link: s.video_link || null,
+                orderNo: s.orderNo ?? 0,
             }
 
             // Check if a new image was uploaded for this existing sample
@@ -191,6 +210,7 @@ export async function PUT(
                     image: imageUrl,
                     audio: samplesData[i].audio || null,
                     video_link: samplesData[i].video_link || null,
+                    orderNo: samplesData[i].orderNo ?? 0,
                     showcase_id: params.id,
                 },
             })
@@ -212,6 +232,7 @@ export async function PUT(
                     value: parseFloat(m.value),
                     suffix: m.suffix || null,
                     hide_name: m.hide_name || false,
+                    orderNo: m.orderNo ?? 0,
                     showcase_id: params.id,
                 },
             })
@@ -220,11 +241,11 @@ export async function PUT(
         // Update showcase
         const showcase = await prisma.showcase.update({
             where: { id: params.id },
-            data: validatedData,
+            data: { ...validatedData, ...slugUpdate },
             include: {
                 classification: true,
-                samples: true,
-                metrics: true,
+                samples: { orderBy: { orderNo: 'asc' } },
+                metrics: { orderBy: { orderNo: 'asc' } },
             },
         })
 

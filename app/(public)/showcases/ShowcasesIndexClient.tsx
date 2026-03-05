@@ -13,6 +13,7 @@ interface Classification {
     image: string | null
     showcases: Array<{
         id: string
+        slug: string
         name: string
         tagline: string
     }>
@@ -52,7 +53,7 @@ export function ShowcasesIndexClient({ classifications }: ShowcasesIndexClientPr
                         <button
                             key={classification.id}
                             disabled={classification.showcases.length === 0}
-                            onClick={() => router.push(`/showcases/${classification.showcases[0].id}`)}
+                            onClick={() => router.push(`/showcases/${classification.showcases[0].slug}`)}
                             className={cn(
                                 "group text-left transition-all duration-300 w-full",
                                 classification.showcases.length === 0 ? "cursor-not-allowed opacity-50" : "cursor-pointer"

@@ -8,12 +8,13 @@ export const metadata = {
 
 export default async function ShowcasesPage() {
     const classifications = await prisma.classification.findMany({
-        orderBy: { id: 'asc' },
+        orderBy: { orderNo: 'asc' },
         include: {
             showcases: {
+                orderBy: { orderNo: 'asc' },
                 include: {
-                    samples: true,
-                    metrics: true,
+                    samples: { orderBy: { orderNo: 'asc' } },
+                    metrics: { orderBy: { orderNo: 'asc' } },
                 },
             },
         },

@@ -12,6 +12,7 @@ export const showcaseSchema = z.object({
     formats: z.string().optional(),
     source: z.string().optional(),
     metrics_text: z.string().optional(),
+    orderNo: z.coerce.number().int().optional().default(0),
 })
 
 export type ShowcaseFormData = z.infer<typeof showcaseSchema>

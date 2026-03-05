@@ -21,6 +21,7 @@ interface SampleEntry {
     imagePreview: string | null
     audio: string
     videoLink: string
+    orderNo: number
     isExisting: boolean
 }
 
@@ -32,6 +33,7 @@ interface MetricEntry {
     value: string
     suffix: string
     hide_name: boolean
+    orderNo: number
 }
 
 interface ShowcaseFormProps {
@@ -63,6 +65,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             formats: initialData?.formats || '',
             source: initialData?.source || '',
             metrics_text: initialData?.metrics_text || '',
+            orderNo: initialData?.orderNo ?? 0,
         },
     })
 
@@ -77,6 +80,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 imagePreview: s.image,
                 audio: s.audio || '',
                 videoLink: s.video_link || '',
+                orderNo: s.orderNo ?? 0,
                 isExisting: true,
             }))
         }
@@ -94,6 +98,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 value: m.value.toString(),
                 suffix: m.suffix || '',
                 hide_name: m.hide_name || false,
+                orderNo: m.orderNo ?? 0,
             }))
         }
         return []
@@ -107,6 +112,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             imagePreview: null,
             audio: '',
             videoLink: '',
+            orderNo: 0,
             isExisting: false,
         }])
     }
@@ -144,6 +150,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             value: '',
             suffix: '',
             hide_name: false,
+            orderNo: 0,
         }])
     }
 
@@ -172,8 +179,8 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             })
 
             // Separate existing and new samples
-            const existingSamples: { id: string; name: string; description: string; audio: string; video_link: string }[] = []
-            const newSamples: { name: string; description: string; audio: string; video_link: string }[] = []
+            const existingSamples: { id: string; name: string; description: string; audio: string; video_link: string; orderNo: number }[] = []
+            const newSamples: { name: string; description: string; audio: string; video_link: string; orderNo: number }[] = []
             let newSampleIndex = 0
             let existingSampleIndex = 0
 
@@ -185,6 +192,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         description: sample.description,
                         audio: sample.audio,
                         video_link: sample.videoLink,
+                        orderNo: sample.orderNo,
                     })
                     if (sample.imageFile) {
                         formData.append(`existing_sample_image_${existingSampleIndex}`, sample.imageFile)
@@ -201,6 +209,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         description: sample.description,
                         audio: sample.audio,
                         video_link: sample.videoLink,
+                        orderNo: sample.orderNo,
                     })
                     formData.append(`sample_image_${newSampleIndex}`, sample.imageFile)
                     newSampleIndex++
@@ -312,7 +321,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="source">Source</Label>
                     <Input id="source" {...register('source')} disabled={isSubmitting} />
@@ -320,6 +329,10 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 <div className="space-y-2">
                     <Label htmlFor="metrics_text">Metrics Text</Label>
                     <Input id="metrics_text" {...register('metrics_text')} disabled={isSubmitting} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="orderNo">Order No</Label>
+                    <Input id="orderNo" type="number" {...register('orderNo', { valueAsNumber: true })} disabled={isSubmitting} placeholder="0" />
                 </div>
             </div>
 
@@ -347,7 +360,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                             <X size={18} />
                         </button>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label>Sample Name *</Label>
                                 <Input
@@ -363,6 +376,16 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                                     value={sample.description}
                                     onChange={(e) => updateSample(index, 'description', e.target.value)}
                                     disabled={isSubmitting}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Order No</Label>
+                                <Input
+                                    type="number"
+                                    value={sample.orderNo}
+                                    onChange={(e) => updateSample(index, 'orderNo', parseInt(e.target.value) || 0)}
+                                    disabled={isSubmitting}
+                                    placeholder="0"
                                 />
                             </div>
                         </div>
@@ -467,7 +490,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
                             <div className="space-y-2">
                                 <Label>Prefix</Label>
                                 <Input
@@ -491,6 +514,16 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                                     value={metric.caption}
                                     onChange={(e) => updateMetric(index, 'caption', e.target.value)}
                                     disabled={isSubmitting}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Order No</Label>
+                                <Input
+                                    type="number"
+                                    value={metric.orderNo}
+                                    onChange={(e) => updateMetric(index, 'orderNo', parseInt(e.target.value) || 0)}
+                                    disabled={isSubmitting}
+                                    placeholder="0"
                                 />
                             </div>
                             <div className="flex items-end space-x-2 pb-1">

@@ -30,6 +30,7 @@ interface Metric {
 
 interface Showcase {
     id: string
+    slug: string
     name: string
     tagline: string
     objective: string | null
@@ -49,7 +50,7 @@ interface Showcase {
 interface ClassificationWithShowcases {
     id: string
     name: string
-    showcases: { id: string; name: string }[]
+    showcases: { id: string; name: string; slug: string }[]
 }
 
 interface ShowcaseShowClientProps {
@@ -139,7 +140,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                         {/* Left: Tree navigation (desktop only) */}
                         <ShowcaseSidebar
                             classifications={allClassifications}
-                            currentShowcaseId={showcase.id}
+                            currentShowcaseId={showcase.slug}
                         />
 
                         {/* Right: Main content */}
@@ -170,7 +171,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                         key={sample.id}
                                                         onClick={() => setActiveSampleIndex(index)}
                                                         className={cn(
-                                                            'flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-xs font-medium transition-all duration-300',
+                                                            'flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm font-[900] transition-all duration-300',
                                                             index === activeSampleIndex
                                                                 ? 'bg-[hsl(var(--ptr-primary))] text-primary'
                                                                 : 'bg-white/10 text-white hover:bg-white/20'
@@ -196,12 +197,21 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                         <video
                                                             ref={videoRef}
                                                             src={activeSample.video_link!}
-                                                            poster={activeSample.image}
                                                             onTimeUpdate={handleTimeUpdate}
                                                             onEnded={handleEnded}
                                                             playsInline
                                                             className="absolute inset-0 w-full h-full object-cover"
                                                         />
+                                                        {/* Poster image overlay — visible when not playing */}
+                                                        {!isPlaying && (
+                                                            <Image
+                                                                src={activeSample.image}
+                                                                alt={activeSample.name}
+                                                                fill
+                                                                className="absolute inset-0 object-cover z-[5]"
+                                                                unoptimized
+                                                            />
+                                                        )}
                                                         {/* Centered play/pause overlay */}
                                                         <button
                                                             onClick={togglePlay}
@@ -322,7 +332,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                             {/* Metrics Section */}
                             {showcase.metrics.length > 0 && (
                                 <div className="mt-16 pt-10 border-t border-white/10">
-                                    <div className="flex flex-wrap gap-12 md:gap-20">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
                                         {showcase.metrics.map((metric) => (
                                             <div key={metric.id}>
                                                 {!metric.hide_name && (
@@ -335,8 +345,13 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                 >
                                                     {formatValue(metric)}
                                                 </p>
+                                                {metric.caption && (
+                                                    <p className="mt-1 text-sm md:text-base font-bold">
+                                                        {metric.caption}
+                                                    </p>
+                                                )}
                                                 {metric.short_description && (
-                                                    <p className="mt-1 text-sm md:text-base">
+                                                    <p className="mt-1 text-sm md:text-base font-light">
                                                         {metric.short_description}
                                                     </p>
                                                 )}
@@ -348,10 +363,10 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                             {/* Campaign Details */}
                             {(showcase.campaign_dates || showcase.market || showcase.formats || showcase.source) && (
-                                <div className="mt-10 pt-6 font-spotify font-bold">
+                                <div className="mt-10 pt-6 border-t border-white/10 font-spotify font-bold">
                                     <p className="text-base text-white leading-relaxed">
                                         {[
-                                            showcase.campaign_dates ? `Campaign dates: ${showcase.campaign_dates}` : null,
+                                            showcase.campaign_dates ? `Campaign Dates: ${showcase.campaign_dates}` : null,
                                             showcase.formats ? `Formats: ${showcase.formats}` : null,
                                             showcase.market ? `Market: ${showcase.market}` : null,
                                         ]

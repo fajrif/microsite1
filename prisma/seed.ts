@@ -47,26 +47,23 @@ async function main() {
     // Create some sample categories
     const categories = await Promise.all([
         prisma.category.upsert({
-            where: { id: 'category-1' },
+            where: { name: 'Technology' },
             update: {},
             create: {
-                id: 'category-1',
                 name: 'Technology',
             },
         }),
         prisma.category.upsert({
-            where: { id: 'category-2' },
+            where: { name: 'Business' },
             update: {},
             create: {
-                id: 'category-2',
                 name: 'Business',
             },
         }),
         prisma.category.upsert({
-            where: { id: 'category-3' },
+            where: { name: 'News' },
             update: {},
             create: {
-                id: 'category-3',
                 name: 'News',
             },
         }),
@@ -78,11 +75,11 @@ async function main() {
     // Seed Classifications
     // ============================================
     const classificationData = [
-        { id: 'classification-1', name: '3D Audio', image: '3d-audio.png' },
-        { id: 'classification-2', name: 'ASMR Audio', image: 'asmr-audio.png' },
-        { id: 'classification-3', name: 'Jingle', image: 'jingle.png' },
-        { id: 'classification-4', name: 'Talent', image: 'talents.png' },
-        { id: 'classification-5', name: 'Gen AI Audio Creator', image: 'gen-ai.png' },
+        { name: '3D Audio', image: '3d-audio.png' },
+        { name: 'ASMR Audio', image: 'asmr-audio.png' },
+        { name: 'Jingle', image: 'jingle.png' },
+        { name: 'Talent', image: 'talents.png' },
+        { name: 'Gen AI Audio Creator', image: 'gen-ai.png' },
     ]
 
     const classifications = await Promise.all(
@@ -92,10 +89,9 @@ async function main() {
                 `classification-${c.image}`
             )
             return prisma.classification.upsert({
-                where: { id: c.id },
+                where: { name: c.name },
                 update: { image: imageUrl },
                 create: {
-                    id: c.id,
                     name: c.name,
                     image: imageUrl,
                 },
@@ -108,23 +104,23 @@ async function main() {
     // ============================================
     // Seed Showcase: Porsche Audio
     // ============================================
-    const showcaseId = 'showcase-porsche-audio'
+    const classification3dAudio = classifications[0] // '3D Audio'
 
     // Copy sample assets
     const sampleImage = copyAsset('public/images/showcases/sample.png', 'showcase-sample.png')
     const sampleAudio = copyAsset('public/audio/sample-blackbird.wav', 'showcase-sample-blackbird.wav')
 
     const showcase = await prisma.showcase.upsert({
-        where: { id: showcaseId },
+        where: { name: 'Porsche Audio' },
         update: {
             tagline: 'Porsche takes listeners on a 3D Audio test drive',
             objective: 'Porsche wanted to raise awareness and drive consideration for the relaunch of their Panamera model, reaching the right high-value audiences at scale.',
             solution: 'Porsche partnered with Spotify to create a virtual test drive through an immersive 3D audio experience, targeting car buyers, high-income earners, and highly educated audiences, with interested listeners prompted to book a real in person test drive.',
         },
         create: {
-            id: showcaseId,
             name: 'Porsche Audio',
-            classification_id: 'classification-1', // 3D Audio
+            slug: 'porsche-audio',
+            classification_id: classification3dAudio.id,
             tagline: 'Porsche takes listeners on a 3D Audio test drive',
             objective: 'Porsche wanted to raise awareness and drive consideration for the relaunch of their Panamera model, reaching the right high-value audiences at scale.',
             solution: 'Porsche partnered with Spotify to create a virtual test drive through an immersive 3D audio experience, targeting car buyers, high-income earners, and highly educated audiences, with interested listeners prompted to book a real in person test drive.',
@@ -134,18 +130,17 @@ async function main() {
     console.log('✅ Created showcase:', showcase.name)
 
     // Delete existing samples and metrics for idempotency
-    await prisma.sample.deleteMany({ where: { showcase_id: showcaseId } })
-    await prisma.metric.deleteMany({ where: { showcase_id: showcaseId } })
+    await prisma.sample.deleteMany({ where: { showcase_id: showcase.id } })
+    await prisma.metric.deleteMany({ where: { showcase_id: showcase.id } })
 
     // Create samples
     const sampleNames = ['Horsepower', 'Interior', 'Technology']
     const samples = await Promise.all(
-        sampleNames.map((name, i) =>
+        sampleNames.map((name) =>
             prisma.sample.create({
                 data: {
-                    id: `sample-${i + 1}`,
                     name,
-                    showcase_id: showcaseId,
+                    showcase_id: showcase.id,
                     image: sampleImage,
                     audio: sampleAudio,
                 },
@@ -158,14 +153,12 @@ async function main() {
     // Create metrics
     const metricsData = [
         {
-            id: 'metric-1',
             name: 'impressions',
             short_description: 'Total Campaign',
             value: 1.7,
             suffix: 'M',
         },
         {
-            id: 'metric-2',
             name: 'clicks to site',
             short_description: 'To set up an in-person test drive',
             value: 85,
@@ -177,12 +170,11 @@ async function main() {
         metricsData.map((m) =>
             prisma.metric.create({
                 data: {
-                    id: m.id,
                     name: m.name,
                     short_description: m.short_description,
                     value: m.value,
                     suffix: m.suffix,
-                    showcase_id: showcaseId,
+                    showcase_id: showcase.id,
                 },
             })
         )

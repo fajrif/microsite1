@@ -25,6 +25,7 @@ interface ClassificationDialogProps {
         name: string
         description: string | null
         image: string | null
+        orderNo: number
     } | null
     onSuccess: () => void
 }
@@ -51,17 +52,17 @@ export function ClassificationDialog({
 
     useEffect(() => {
         if (classification) {
-            reset({ name: classification.name, description: classification.description || '' })
+            reset({ name: classification.name, description: classification.description || '', orderNo: classification.orderNo ?? 0 })
             setImagePreview(classification.image)
         } else {
-            reset({ name: '', description: '' })
+            reset({ name: '', description: '', orderNo: 0 })
             setImagePreview(null)
         }
     }, [classification, reset])
 
     useEffect(() => {
         if (!open) {
-            reset({ name: '', description: '' })
+            reset({ name: '', description: '', orderNo: 0 })
             setIsSubmitting(false)
             setError('')
             setImagePreview(null)
@@ -85,6 +86,7 @@ export function ClassificationDialog({
             const formData = new FormData()
             formData.append('name', data.name)
             if (data.description) formData.append('description', data.description)
+            formData.append('orderNo', String(data.orderNo ?? 0))
 
             const imageInput = document.getElementById('classification-image') as HTMLInputElement
             if (imageInput?.files?.[0]) {
@@ -170,6 +172,17 @@ export function ClassificationDialog({
                             {...register('description')}
                             disabled={isSubmitting}
                             placeholder="Optional description"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="orderNo">Order No</Label>
+                        <Input
+                            id="orderNo"
+                            type="number"
+                            {...register('orderNo', { valueAsNumber: true })}
+                            disabled={isSubmitting}
+                            placeholder="0"
                         />
                     </div>
 
