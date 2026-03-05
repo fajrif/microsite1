@@ -185,10 +185,10 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                                     {/* Right: Player */}
                                     {activeSample && (
-                                        <div className="w-[220px] h-[440px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col" style={{ borderColor: 'hsl(var(--ptr-primary))' }}>
-                                            {/* Image / Video area */}
+                                        <div className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col" style={{ borderColor: 'hsl(var(--ptr-primary))' }}>
                                             {hasVideo ? (
-                                                <div className="flex-1 relative overflow-hidden">
+                                                /* VIDEO: full-height with centered play overlay */
+                                                <div className="relative w-full h-full">
                                                     <video
                                                         ref={videoRef}
                                                         src={activeSample.video_link!}
@@ -198,68 +198,87 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                         playsInline
                                                         className="absolute inset-0 w-full h-full object-cover"
                                                     />
+                                                    {/* Centered play/pause overlay */}
+                                                    <button
+                                                        onClick={togglePlay}
+                                                        className="absolute inset-0 flex items-center justify-center z-10 group"
+                                                    >
+                                                        <div className={cn(
+                                                            'w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center transition-all duration-300',
+                                                            isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
+                                                        )}>
+                                                            {isPlaying ? (
+                                                                <Pause className="h-6 w-6 text-white" />
+                                                            ) : (
+                                                                <Play className="h-6 w-6 text-white ml-0.5" />
+                                                            )}
+                                                        </div>
+                                                    </button>
                                                 </div>
                                             ) : (
-                                                <div className="flex-1 flex items-center justify-center overflow-hidden p-3 pt-4">
-                                                    <div className="relative w-full" style={{ aspectRatio: '4/5' }}>
-                                                        <Image
-                                                            src={activeSample.image}
-                                                            alt={activeSample.name}
-                                                            fill
-                                                            className="object-contain rounded-sm"
-                                                            unoptimized
+                                                /* AUDIO: image + bottom player controls */
+                                                <>
+                                                    <div className="flex-1 flex items-center justify-center overflow-hidden p-3 pt-4">
+                                                        <div className="relative w-full" style={{ aspectRatio: '4/5' }}>
+                                                            <Image
+                                                                src={activeSample.image}
+                                                                alt={activeSample.name}
+                                                                fill
+                                                                className="object-contain rounded-sm"
+                                                                unoptimized
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Audio element (hidden) */}
+                                                    {hasAudio && (
+                                                        <audio
+                                                            ref={audioRef}
+                                                            src={activeSample.audio!}
+                                                            onTimeUpdate={handleTimeUpdate}
+                                                            onEnded={handleEnded}
                                                         />
-                                                    </div>
-                                                </div>
-                                            )}
+                                                    )}
 
-                                            {/* Audio element (hidden) */}
-                                            {hasAudio && (
-                                                <audio
-                                                    ref={audioRef}
-                                                    src={activeSample.audio!}
-                                                    onTimeUpdate={handleTimeUpdate}
-                                                    onEnded={handleEnded}
-                                                />
-                                            )}
+                                                    {/* Player controls — audio only */}
+                                                    {hasAudio && (
+                                                        <div className="shrink-0 px-4 pb-4 pt-3">
+                                                            {/* Progress bar */}
+                                                            <div className="w-full h-[3px] bg-white/20 rounded-full mb-4">
+                                                                <div
+                                                                    className="h-full rounded-full transition-all duration-100"
+                                                                    style={{ width: `${progress}%`, backgroundColor: 'hsl(var(--ptr-primary))' }}
+                                                                />
+                                                            </div>
 
-                                            {/* Player controls area */}
-                                            {hasMedia && (
-                                                <div className="shrink-0 px-4 pb-4 pt-3">
-                                                    {/* Progress bar */}
-                                                    <div className="w-full h-[3px] bg-white/20 rounded-full mb-4">
-                                                        <div
-                                                            className="h-full rounded-full transition-all duration-100"
-                                                            style={{ width: `${progress}%`, backgroundColor: 'hsl(var(--ptr-primary))' }}
-                                                        />
-                                                    </div>
-
-                                                    {/* Controls */}
-                                                    <div className="flex items-center justify-center gap-6">
-                                                        <button
-                                                            onClick={prevSample}
-                                                            className="text-white/40 hover:text-white transition-colors"
-                                                        >
-                                                            <SkipBack className="h-4 w-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={togglePlay}
-                                                            className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform shadow-md"
-                                                        >
-                                                            {isPlaying ? (
-                                                                <Pause className="h-4 w-4 text-black" />
-                                                            ) : (
-                                                                <Play className="h-4 w-4 text-black ml-0.5" />
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={nextSampleFn}
-                                                            className="text-white/40 hover:text-white transition-colors"
-                                                        >
-                                                            <SkipForward className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                            {/* Controls */}
+                                                            <div className="flex items-center justify-center gap-6">
+                                                                <button
+                                                                    onClick={prevSample}
+                                                                    className="text-white/40 hover:text-white transition-colors"
+                                                                >
+                                                                    <SkipBack className="h-4 w-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={togglePlay}
+                                                                    className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform shadow-md"
+                                                                >
+                                                                    {isPlaying ? (
+                                                                        <Pause className="h-4 w-4 text-black" />
+                                                                    ) : (
+                                                                        <Play className="h-4 w-4 text-black ml-0.5" />
+                                                                    )}
+                                                                </button>
+                                                                <button
+                                                                    onClick={nextSampleFn}
+                                                                    className="text-white/40 hover:text-white transition-colors"
+                                                                >
+                                                                    <SkipForward className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     )}
