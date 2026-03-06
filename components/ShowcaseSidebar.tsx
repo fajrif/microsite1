@@ -35,14 +35,6 @@ export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
 
     return (
         <nav className="hidden md:block w-52 flex-shrink-0 font-spotify">
-            <Link
-                href="/showcases"
-                className="flex items-center gap-1 text-xs text-white/80 hover:text-white transition-colors uppercase tracking-widest mb-4"
-            >
-                <ChevronLeft className="h-4 w-4" />
-                Back To Home
-            </Link>
-
             <TreeProvider
                 defaultExpandedIds={activeClassificationId ? [activeClassificationId] : []}
                 showIcons={false}
@@ -105,6 +97,13 @@ export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
                     ))}
                 </TreeView>
             </TreeProvider>
+            <Link
+                href="/showcases"
+                className="flex items-center gap-1 text-xs text-white/80 hover:text-white transition-colors tracking-widest mt-4"
+            >
+                <ChevronLeft className="h-4 w-4" />
+                Back To Home
+            </Link>
         </nav>
     )
 }
