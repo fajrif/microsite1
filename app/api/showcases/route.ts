@@ -14,17 +14,21 @@ async function uploadFile(file: File): Promise<string> {
         })
         return blob.url
     } else {
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-        const fileName = `${Date.now()}-${file.name}`
-        const fs = await import('fs/promises')
-        const path = await import('path')
-
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-        await fs.mkdir(uploadDir, { recursive: true })
-        await fs.writeFile(path.join(uploadDir, fileName), buffer)
-        return `/uploads/${fileName}`
+        return uploadFileLocal(file)
     }
+}
+
+async function uploadFileLocal(file: File): Promise<string> {
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    const fileName = `${Date.now()}-${file.name}`
+    const fs = await import('fs/promises')
+    const path = await import('path')
+
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+    await fs.mkdir(uploadDir, { recursive: true })
+    await fs.writeFile(path.join(uploadDir, fileName), buffer)
+    return `/uploads/${fileName}`
 }
 
 // GET /api/showcases - List showcases with optional classification filter
@@ -150,7 +154,7 @@ export async function POST(request: Request) {
                 )
             }
 
-            const imageUrl = await uploadFile(sampleImage)
+            const imageUrl = await uploadFileLocal(sampleImage)
 
             sampleCreates.push({
                 name: samplesData[i].name,

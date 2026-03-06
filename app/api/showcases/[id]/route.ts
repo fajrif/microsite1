@@ -24,17 +24,21 @@ async function uploadFile(file: File): Promise<string> {
         })
         return blob.url
     } else {
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-        const fileName = `${Date.now()}-${file.name}`
-        const fs = await import('fs/promises')
-        const path = await import('path')
-
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-        await fs.mkdir(uploadDir, { recursive: true })
-        await fs.writeFile(path.join(uploadDir, fileName), buffer)
-        return `/uploads/${fileName}`
+        return uploadFileLocal(file)
     }
+}
+
+async function uploadFileLocal(file: File): Promise<string> {
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    const fileName = `${Date.now()}-${file.name}`
+    const fs = await import('fs/promises')
+    const path = await import('path')
+
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+    await fs.mkdir(uploadDir, { recursive: true })
+    await fs.writeFile(path.join(uploadDir, fileName), buffer)
+    return `/uploads/${fileName}`
 }
 
 // GET /api/showcases/[id]
@@ -181,7 +185,7 @@ export async function PUT(
                 // Delete old image
                 const oldSample = current.samples.find((cs) => cs.id === s.id)
                 if (oldSample) await deleteBlobIfExists(oldSample.image)
-                updateData.image = await uploadFile(newImage)
+                updateData.image = await uploadFileLocal(newImage)
             }
 
             await prisma.sample.update({
@@ -201,7 +205,7 @@ export async function PUT(
                 )
             }
 
-            const imageUrl = await uploadFile(sampleImage)
+            const imageUrl = await uploadFileLocal(sampleImage)
 
             await prisma.sample.create({
                 data: {
