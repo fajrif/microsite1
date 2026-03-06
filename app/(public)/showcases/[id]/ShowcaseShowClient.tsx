@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { ShowcaseSidebar } from '@/components/ShowcaseSidebar'
 import { GradualSpacing } from '@/components/ui/gradual-spacing'
 import { AnimatedDiv } from "@/components/ui/animated-div"
+import { ShutterText } from '@/components/ui/shutter-text'
 
 interface Sample {
     id: string
@@ -343,7 +344,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                 <p className="text-5xl md:text-6xl font-spotify font-[900]"
                                                     style={{ color: 'hsl(var(--ptr-primary))' }}
                                                 >
-                                                    {formatValue(metric)}
+                                                    <ShutterText text={formatValue(metric)} />
                                                 </p>
                                                 {metric.caption && (
                                                     <p className="mt-1 text-sm md:text-base font-bold">
