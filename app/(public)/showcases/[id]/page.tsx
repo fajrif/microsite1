@@ -9,10 +9,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         select: { name: true, tagline: true },
     })
 
-    if (!showcase) return { title: 'Showcase Not Found' }
+    if (!showcase) return { title: '未找到展示区' }
 
     return {
-        title: `${showcase.name} | Showcases | Spotify Advertising`,
+        title: `${showcase.name} | Spotify 广告`,
         description: showcase.tagline,
     }
 }

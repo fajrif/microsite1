@@ -2,8 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { ShowcasesIndexClient } from './ShowcasesIndexClient'
 
 export const metadata = {
-    title: 'Showcases | Spotify Advertising',
-    description: 'Hear some of the best in-class audio and video campaigns created by global brands and agencies.',
+    title: 'Spotify 广告',
+    description: '五大创意类型最佳实',
 }
 
 export default async function ShowcasesPage() {
