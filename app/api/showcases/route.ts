@@ -131,12 +131,26 @@ export async function POST(request: Request) {
 
             const imageUrl = await uploadFile(sampleImage)
 
+            // Handle audio file upload
+            const sampleAudio = formData.get(`sample_audio_${i}`) as File | null
+            let audioUrl = samplesData[i].audio || null
+            if (sampleAudio && sampleAudio.size > 0) {
+                audioUrl = await uploadFile(sampleAudio)
+            }
+
+            // Handle video file upload
+            const sampleVideo = formData.get(`sample_video_${i}`) as File | null
+            let videoUrl = samplesData[i].video_link || null
+            if (sampleVideo && sampleVideo.size > 0) {
+                videoUrl = await uploadFile(sampleVideo)
+            }
+
             sampleCreates.push({
                 name: samplesData[i].name,
                 description: samplesData[i].description || null,
                 image: imageUrl,
-                audio: samplesData[i].audio || null,
-                video_link: samplesData[i].video_link || null,
+                audio: audioUrl,
+                video_link: videoUrl,
                 orderNo: samplesData[i].orderNo ?? 0,
             })
         }

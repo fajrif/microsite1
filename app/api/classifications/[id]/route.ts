@@ -3,17 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { classificationSchema } from '@/lib/validations/classification'
-import { put, del } from '@vercel/blob'
-
-async function deleteBlobIfExists(url: string | null | undefined) {
-    if (url && url.includes('blob.vercel-storage.com')) {
-        try {
-            await del(url)
-        } catch (error) {
-            console.error('Error deleting blob:', error)
-        }
-    }
-}
+import { uploadFile, deleteFile } from '@/lib/storage'
 
 // GET /api/classifications/[id]
 export async function GET(
@@ -77,27 +67,9 @@ export async function PUT(
         // Handle image upload
         if (image && image.size > 0) {
             if (current?.image) {
-                await deleteBlobIfExists(current.image)
+                await deleteFile(current.image)
             }
-
-            if (process.env.BLOB_READ_WRITE_TOKEN) {
-                const blob = await put(image.name, image, {
-                    access: 'public',
-                    addRandomSuffix: true,
-                })
-                imageUrl = blob.url
-            } else {
-                const bytes = await image.arrayBuffer()
-                const buffer = Buffer.from(bytes)
-                const fileName = `${Date.now()}-${image.name}`
-                const fs = await import('fs/promises')
-                const path = await import('path')
-
-                const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-                await fs.mkdir(uploadDir, { recursive: true })
-                await fs.writeFile(path.join(uploadDir, fileName), buffer)
-                imageUrl = `/uploads/${fileName}`
-            }
+            imageUrl = await uploadFile(image)
         }
 
         const data = {
@@ -164,7 +136,7 @@ export async function DELETE(
         })
 
         if (classification?.image) {
-            await deleteBlobIfExists(classification.image)
+            await deleteFile(classification.image)
         }
 
         await prisma.classification.delete({

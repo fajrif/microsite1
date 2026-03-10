@@ -78,4 +78,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - Change the default admin password
 - Create categories for your articles
 - Start publishing blog content
-- Configure Vercel Blob for production images
+- Configure Alibaba Cloud OSS for production file storage

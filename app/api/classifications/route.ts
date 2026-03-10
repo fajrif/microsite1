@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { classificationSchema } from '@/lib/validations/classification'
-import { put } from '@vercel/blob'
+import { uploadFile } from '@/lib/storage'
 
 // GET /api/classifications - List all classifications with search and pagination
 export async function GET(request: Request) {
@@ -98,24 +98,7 @@ export async function POST(request: Request) {
 
         // Handle image upload
         if (image && image.size > 0) {
-            if (process.env.BLOB_READ_WRITE_TOKEN) {
-                const blob = await put(image.name, image, {
-                    access: 'public',
-                    addRandomSuffix: true,
-                })
-                imageUrl = blob.url
-            } else {
-                const bytes = await image.arrayBuffer()
-                const buffer = Buffer.from(bytes)
-                const fileName = `${Date.now()}-${image.name}`
-                const fs = await import('fs/promises')
-                const path = await import('path')
-
-                const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-                await fs.mkdir(uploadDir, { recursive: true })
-                await fs.writeFile(path.join(uploadDir, fileName), buffer)
-                imageUrl = `/uploads/${fileName}`
-            }
+            imageUrl = await uploadFile(image)
         }
 
         const data = {

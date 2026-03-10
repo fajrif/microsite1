@@ -19,8 +19,10 @@ interface SampleEntry {
     description: string
     imageFile: File | null
     imagePreview: string | null
-    audio: string
-    videoLink: string
+    audioFile: File | null
+    audioPreview: string | null
+    videoFile: File | null
+    videoPreview: string | null
     orderNo: number
     isExisting: boolean
 }
@@ -78,8 +80,10 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 description: s.description || '',
                 imageFile: null,
                 imagePreview: s.image,
-                audio: s.audio || '',
-                videoLink: s.video_link || '',
+                audioFile: null,
+                audioPreview: s.audio || null,
+                videoFile: null,
+                videoPreview: s.video_link || null,
                 orderNo: s.orderNo ?? 0,
                 isExisting: true,
             }))
@@ -110,8 +114,10 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             description: '',
             imageFile: null,
             imagePreview: null,
-            audio: '',
-            videoLink: '',
+            audioFile: null,
+            audioPreview: null,
+            videoFile: null,
+            videoPreview: null,
             orderNo: 0,
             isExisting: false,
         }])
@@ -138,6 +144,26 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 setSamples(updated)
             }
             reader.readAsDataURL(file)
+        }
+    }
+
+    const handleSampleAudio = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const updated = [...samples]
+            updated[index].audioFile = file
+            updated[index].audioPreview = file.name
+            setSamples(updated)
+        }
+    }
+
+    const handleSampleVideo = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const updated = [...samples]
+            updated[index].videoFile = file
+            updated[index].videoPreview = file.name
+            setSamples(updated)
         }
     }
 
@@ -190,12 +216,18 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         id: sample.id,
                         name: sample.name,
                         description: sample.description,
-                        audio: sample.audio,
-                        video_link: sample.videoLink,
+                        audio: sample.audioPreview || '',
+                        video_link: sample.videoPreview || '',
                         orderNo: sample.orderNo,
                     })
                     if (sample.imageFile) {
                         formData.append(`existing_sample_image_${existingSampleIndex}`, sample.imageFile)
+                    }
+                    if (sample.audioFile) {
+                        formData.append(`existing_sample_audio_${existingSampleIndex}`, sample.audioFile)
+                    }
+                    if (sample.videoFile) {
+                        formData.append(`existing_sample_video_${existingSampleIndex}`, sample.videoFile)
                     }
                     existingSampleIndex++
                 } else {
@@ -207,11 +239,17 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                     newSamples.push({
                         name: sample.name,
                         description: sample.description,
-                        audio: sample.audio,
-                        video_link: sample.videoLink,
+                        audio: '',
+                        video_link: '',
                         orderNo: sample.orderNo,
                     })
                     formData.append(`sample_image_${newSampleIndex}`, sample.imageFile)
+                    if (sample.audioFile) {
+                        formData.append(`sample_audio_${newSampleIndex}`, sample.audioFile)
+                    }
+                    if (sample.videoFile) {
+                        formData.append(`sample_video_${newSampleIndex}`, sample.videoFile)
+                    }
                     newSampleIndex++
                 }
             }
@@ -406,22 +444,34 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <div className="space-y-2">
-                                <Label>Audio Path</Label>
+                                <Label>{sample.isExisting && sample.audioPreview ? 'Replace Audio' : 'Audio File'}</Label>
                                 <Input
-                                    value={sample.audio}
-                                    onChange={(e) => updateSample(index, 'audio', e.target.value)}
+                                    type="file"
+                                    accept="audio/*"
+                                    onChange={(e) => handleSampleAudio(index, e)}
                                     disabled={isSubmitting}
-                                    placeholder="/audios/sample.wav"
                                 />
+                                {sample.audioPreview && !sample.audioFile && (
+                                    <p className="text-xs text-gray-500 truncate">Current: {sample.audioPreview}</p>
+                                )}
+                                {sample.audioFile && (
+                                    <p className="text-xs text-green-600 truncate">New: {sample.audioFile.name}</p>
+                                )}
                             </div>
                             <div className="space-y-2">
-                                <Label>Video Link</Label>
+                                <Label>{sample.isExisting && sample.videoPreview ? 'Replace Video' : 'Video File'}</Label>
                                 <Input
-                                    value={sample.videoLink}
-                                    onChange={(e) => updateSample(index, 'videoLink', e.target.value)}
+                                    type="file"
+                                    accept="video/*"
+                                    onChange={(e) => handleSampleVideo(index, e)}
                                     disabled={isSubmitting}
-                                    placeholder="/videos/sample.mp4"
                                 />
+                                {sample.videoPreview && !sample.videoFile && (
+                                    <p className="text-xs text-gray-500 truncate">Current: {sample.videoPreview}</p>
+                                )}
+                                {sample.videoFile && (
+                                    <p className="text-xs text-green-600 truncate">New: {sample.videoFile.name}</p>
+                                )}
                             </div>
                         </div>
 

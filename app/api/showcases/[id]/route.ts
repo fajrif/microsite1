@@ -129,6 +129,7 @@ export async function PUT(
             if (!keepSampleIds.includes(sample.id)) {
                 await deleteBlobIfExists(sample.image)
                 await deleteBlobIfExists(sample.audio)
+                await deleteBlobIfExists(sample.video_link)
                 await prisma.sample.delete({ where: { id: sample.id } })
             }
         }
@@ -136,6 +137,7 @@ export async function PUT(
         // Update existing samples
         for (let i = 0; i < existingSamplesData.length; i++) {
             const s = existingSamplesData[i]
+            const oldSample = current.samples.find((cs) => cs.id === s.id)
             const updateData: any = {
                 name: s.name,
                 description: s.description || null,
@@ -147,10 +149,22 @@ export async function PUT(
             // Check if a new image was uploaded for this existing sample
             const newImage = formData.get(`existing_sample_image_${i}`) as File | null
             if (newImage && newImage.size > 0) {
-                // Delete old image
-                const oldSample = current.samples.find((cs) => cs.id === s.id)
                 if (oldSample) await deleteBlobIfExists(oldSample.image)
                 updateData.image = await uploadFile(newImage)
+            }
+
+            // Check if a new audio was uploaded
+            const newAudio = formData.get(`existing_sample_audio_${i}`) as File | null
+            if (newAudio && newAudio.size > 0) {
+                if (oldSample) await deleteBlobIfExists(oldSample.audio)
+                updateData.audio = await uploadFile(newAudio)
+            }
+
+            // Check if a new video was uploaded
+            const newVideo = formData.get(`existing_sample_video_${i}`) as File | null
+            if (newVideo && newVideo.size > 0) {
+                if (oldSample) await deleteBlobIfExists(oldSample.video_link)
+                updateData.video_link = await uploadFile(newVideo)
             }
 
             await prisma.sample.update({
@@ -172,13 +186,27 @@ export async function PUT(
 
             const imageUrl = await uploadFile(sampleImage)
 
+            // Handle audio file upload
+            const sampleAudio = formData.get(`sample_audio_${i}`) as File | null
+            let audioUrl = samplesData[i].audio || null
+            if (sampleAudio && sampleAudio.size > 0) {
+                audioUrl = await uploadFile(sampleAudio)
+            }
+
+            // Handle video file upload
+            const sampleVideo = formData.get(`sample_video_${i}`) as File | null
+            let videoUrl = samplesData[i].video_link || null
+            if (sampleVideo && sampleVideo.size > 0) {
+                videoUrl = await uploadFile(sampleVideo)
+            }
+
             await prisma.sample.create({
                 data: {
                     name: samplesData[i].name,
                     description: samplesData[i].description || null,
                     image: imageUrl,
-                    audio: samplesData[i].audio || null,
-                    video_link: samplesData[i].video_link || null,
+                    audio: audioUrl,
+                    video_link: videoUrl,
                     orderNo: samplesData[i].orderNo ?? 0,
                     showcase_id: params.id,
                 },
@@ -251,6 +279,7 @@ export async function DELETE(
             for (const sample of showcase.samples) {
                 await deleteBlobIfExists(sample.image)
                 await deleteBlobIfExists(sample.audio)
+                await deleteBlobIfExists(sample.video_link)
             }
         }
 
