@@ -3,43 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { showcaseSchema } from '@/lib/validations/showcase'
-import { put, del } from '@vercel/blob'
 import { generateSlug } from '@/lib/slug'
-
-async function deleteBlobIfExists(url: string | null | undefined) {
-    if (url && url.includes('blob.vercel-storage.com')) {
-        try {
-            await del(url)
-        } catch (error) {
-            console.error('Error deleting blob:', error)
-        }
-    }
-}
-
-async function uploadFile(file: File): Promise<string> {
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-        const blob = await put(file.name, file, {
-            access: 'public',
-            addRandomSuffix: true,
-        })
-        return blob.url
-    } else {
-        return uploadFileLocal(file)
-    }
-}
-
-async function uploadFileLocal(file: File): Promise<string> {
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const fileName = `${Date.now()}-${file.name}`
-    const fs = await import('fs/promises')
-    const path = await import('path')
-
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-    await fs.mkdir(uploadDir, { recursive: true })
-    await fs.writeFile(path.join(uploadDir, fileName), buffer)
-    return `/uploads/${fileName}`
-}
+import { uploadFile, deleteFile as deleteBlobIfExists } from '@/lib/storage'
 
 // GET /api/showcases/[id]
 export async function GET(
@@ -185,7 +150,7 @@ export async function PUT(
                 // Delete old image
                 const oldSample = current.samples.find((cs) => cs.id === s.id)
                 if (oldSample) await deleteBlobIfExists(oldSample.image)
-                updateData.image = await uploadFileLocal(newImage)
+                updateData.image = await uploadFile(newImage)
             }
 
             await prisma.sample.update({
@@ -205,7 +170,7 @@ export async function PUT(
                 )
             }
 
-            const imageUrl = await uploadFileLocal(sampleImage)
+            const imageUrl = await uploadFile(sampleImage)
 
             await prisma.sample.create({
                 data: {

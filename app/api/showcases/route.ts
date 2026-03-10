@@ -3,33 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { showcaseSchema } from '@/lib/validations/showcase'
-import { put } from '@vercel/blob'
 import { generateSlug } from '@/lib/slug'
-
-async function uploadFile(file: File): Promise<string> {
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-        const blob = await put(file.name, file, {
-            access: 'public',
-            addRandomSuffix: true,
-        })
-        return blob.url
-    } else {
-        return uploadFileLocal(file)
-    }
-}
-
-async function uploadFileLocal(file: File): Promise<string> {
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const fileName = `${Date.now()}-${file.name}`
-    const fs = await import('fs/promises')
-    const path = await import('path')
-
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-    await fs.mkdir(uploadDir, { recursive: true })
-    await fs.writeFile(path.join(uploadDir, fileName), buffer)
-    return `/uploads/${fileName}`
-}
+import { uploadFile } from '@/lib/storage'
 
 // GET /api/showcases - List showcases with optional classification filter
 export async function GET(request: Request) {
@@ -154,7 +129,7 @@ export async function POST(request: Request) {
                 )
             }
 
-            const imageUrl = await uploadFileLocal(sampleImage)
+            const imageUrl = await uploadFile(sampleImage)
 
             sampleCreates.push({
                 name: samplesData[i].name,
