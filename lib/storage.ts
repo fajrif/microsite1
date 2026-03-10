@@ -17,6 +17,7 @@ function getOssClient() {
     accessKeyId: process.env.OSS_ACCESS_KEY_ID!,
     accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET!,
     bucket: process.env.OSS_BUCKET!,
+    timeout: 300_000, // 5 minutes
   })
   return ossClient
 }
