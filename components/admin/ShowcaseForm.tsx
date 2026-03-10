@@ -19,10 +19,13 @@ interface SampleEntry {
     description: string
     imageFile: File | null
     imagePreview: string | null
+    imageClearRequested: boolean
     audioFile: File | null
     audioPreview: string | null
+    audioDeleted: boolean
     videoFile: File | null
     videoPreview: string | null
+    videoDeleted: boolean
     orderNo: number
     isExisting: boolean
 }
@@ -80,10 +83,13 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 description: s.description || '',
                 imageFile: null,
                 imagePreview: s.image,
+                imageClearRequested: false,
                 audioFile: null,
                 audioPreview: s.audio || null,
+                audioDeleted: false,
                 videoFile: null,
                 videoPreview: s.video_link || null,
+                videoDeleted: false,
                 orderNo: s.orderNo ?? 0,
                 isExisting: true,
             }))
@@ -114,10 +120,13 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             description: '',
             imageFile: null,
             imagePreview: null,
+            imageClearRequested: false,
             audioFile: null,
             audioPreview: null,
+            audioDeleted: false,
             videoFile: null,
             videoPreview: null,
+            videoDeleted: false,
             orderNo: 0,
             isExisting: false,
         }])
@@ -141,10 +150,21 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 const updated = [...samples]
                 updated[index].imageFile = file
                 updated[index].imagePreview = reader.result as string
+                updated[index].imageClearRequested = false
                 setSamples(updated)
             }
             reader.readAsDataURL(file)
         }
+    }
+
+    const handleClearSampleImage = (index: number) => {
+        const updated = [...samples]
+        updated[index].imageFile = null
+        updated[index].imagePreview = null
+        updated[index].imageClearRequested = true
+        setSamples(updated)
+        const input = document.getElementById(`sample-image-${index}`) as HTMLInputElement
+        if (input) input.value = ''
     }
 
     const handleSampleAudio = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,8 +173,19 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             const updated = [...samples]
             updated[index].audioFile = file
             updated[index].audioPreview = file.name
+            updated[index].audioDeleted = false
             setSamples(updated)
         }
+    }
+
+    const handleDeleteSampleAudio = (index: number) => {
+        const updated = [...samples]
+        updated[index].audioFile = null
+        updated[index].audioPreview = null
+        updated[index].audioDeleted = true
+        setSamples(updated)
+        const input = document.getElementById(`sample-audio-${index}`) as HTMLInputElement
+        if (input) input.value = ''
     }
 
     const handleSampleVideo = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,8 +194,19 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             const updated = [...samples]
             updated[index].videoFile = file
             updated[index].videoPreview = file.name
+            updated[index].videoDeleted = false
             setSamples(updated)
         }
+    }
+
+    const handleDeleteSampleVideo = (index: number) => {
+        const updated = [...samples]
+        updated[index].videoFile = null
+        updated[index].videoPreview = null
+        updated[index].videoDeleted = true
+        setSamples(updated)
+        const input = document.getElementById(`sample-video-${index}`) as HTMLInputElement
+        if (input) input.value = ''
     }
 
     const addMetric = () => {
@@ -205,20 +247,28 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             })
 
             // Separate existing and new samples
-            const existingSamples: { id: string; name: string; description: string; audio: string; video_link: string; orderNo: number }[] = []
+            const existingSamples: { id: string; name: string; description: string; audio: string; video_link: string; orderNo: number; remove_audio?: boolean; remove_video?: boolean }[] = []
             const newSamples: { name: string; description: string; audio: string; video_link: string; orderNo: number }[] = []
             let newSampleIndex = 0
             let existingSampleIndex = 0
 
             for (const sample of samples) {
                 if (sample.isExisting && sample.id) {
+                    // Validate: existing sample with cleared image must have a new image
+                    if (sample.imageClearRequested && !sample.imageFile) {
+                        setError(`Sample "${sample.name || `#${existingSampleIndex + 1}`}": A new image is required after clearing`)
+                        setIsSubmitting(false)
+                        return
+                    }
                     existingSamples.push({
                         id: sample.id,
                         name: sample.name,
                         description: sample.description,
-                        audio: sample.audioPreview || '',
-                        video_link: sample.videoPreview || '',
+                        audio: sample.audioDeleted ? '' : (sample.audioPreview || ''),
+                        video_link: sample.videoDeleted ? '' : (sample.videoPreview || ''),
                         orderNo: sample.orderNo,
+                        remove_audio: sample.audioDeleted,
+                        remove_video: sample.videoDeleted,
                     })
                     if (sample.imageFile) {
                         formData.append(`existing_sample_image_${existingSampleIndex}`, sample.imageFile)
@@ -432,13 +482,28 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                             <div className="space-y-2">
                                 <Label>{sample.isExisting ? 'Replace Image' : 'Image *'}</Label>
                                 <Input
+                                    id={`sample-image-${index}`}
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => handleSampleImage(index, e)}
                                     disabled={isSubmitting}
                                 />
                                 {sample.imagePreview && (
-                                    <img src={sample.imagePreview} alt="Preview" className="mt-1 max-h-20 rounded" />
+                                    <div className="relative inline-block mt-1">
+                                        <img src={sample.imagePreview} alt="Preview" className="max-h-20 rounded" />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleClearSampleImage(index)}
+                                            disabled={isSubmitting}
+                                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none"
+                                            title="Clear image (new image required)"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                )}
+                                {sample.imageClearRequested && !sample.imagePreview && (
+                                    <p className="text-xs text-amber-600">Image cleared — please upload a new image</p>
                                 )}
                             </div>
                         </div>
@@ -446,13 +511,28 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                             <div className="space-y-2">
                                 <Label>{sample.isExisting && sample.audioPreview ? 'Replace Audio' : 'Audio File'}</Label>
                                 <Input
+                                    id={`sample-audio-${index}`}
                                     type="file"
                                     accept="audio/*"
                                     onChange={(e) => handleSampleAudio(index, e)}
                                     disabled={isSubmitting}
                                 />
                                 {sample.audioPreview && !sample.audioFile && (
-                                    <p className="text-xs text-gray-500 truncate">Current: {sample.audioPreview}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-xs text-gray-500 truncate flex-1">Current: {sample.audioPreview}</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDeleteSampleAudio(index)}
+                                            disabled={isSubmitting}
+                                            className="text-xs text-red-500 hover:text-red-700 whitespace-nowrap"
+                                            title="Delete audio"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                )}
+                                {sample.audioDeleted && (
+                                    <p className="text-xs text-red-500">Audio will be deleted on save</p>
                                 )}
                                 {sample.audioFile && (
                                     <p className="text-xs text-green-600 truncate">New: {sample.audioFile.name}</p>
@@ -461,13 +541,28 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                             <div className="space-y-2">
                                 <Label>{sample.isExisting && sample.videoPreview ? 'Replace Video' : 'Video File'}</Label>
                                 <Input
+                                    id={`sample-video-${index}`}
                                     type="file"
                                     accept="video/*"
                                     onChange={(e) => handleSampleVideo(index, e)}
                                     disabled={isSubmitting}
                                 />
                                 {sample.videoPreview && !sample.videoFile && (
-                                    <p className="text-xs text-gray-500 truncate">Current: {sample.videoPreview}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-xs text-gray-500 truncate flex-1">Current: {sample.videoPreview}</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDeleteSampleVideo(index)}
+                                            disabled={isSubmitting}
+                                            className="text-xs text-red-500 hover:text-red-700 whitespace-nowrap"
+                                            title="Delete video"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                )}
+                                {sample.videoDeleted && (
+                                    <p className="text-xs text-red-500">Video will be deleted on save</p>
                                 )}
                                 {sample.videoFile && (
                                     <p className="text-xs text-green-600 truncate">New: {sample.videoFile.name}</p>

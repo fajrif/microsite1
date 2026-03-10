@@ -39,6 +39,7 @@ export function ClassificationDialog({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState('')
     const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const [imageDeleted, setImageDeleted] = useState(false)
     const isEdit = !!classification
 
     const {
@@ -54,9 +55,11 @@ export function ClassificationDialog({
         if (classification) {
             reset({ name: classification.name, description: classification.description || '', orderNo: classification.orderNo ?? 0 })
             setImagePreview(classification.image)
+            setImageDeleted(false)
         } else {
             reset({ name: '', description: '', orderNo: 0 })
             setImagePreview(null)
+            setImageDeleted(false)
         }
     }, [classification, reset])
 
@@ -66,6 +69,7 @@ export function ClassificationDialog({
             setIsSubmitting(false)
             setError('')
             setImagePreview(null)
+            setImageDeleted(false)
         }
     }, [open, reset])
 
@@ -73,9 +77,19 @@ export function ClassificationDialog({
         const file = e.target.files?.[0]
         if (file) {
             const reader = new FileReader()
-            reader.onloadend = () => setImagePreview(reader.result as string)
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string)
+                setImageDeleted(false)
+            }
             reader.readAsDataURL(file)
         }
+    }
+
+    const handleDeleteImage = () => {
+        setImagePreview(null)
+        setImageDeleted(true)
+        const imageInput = document.getElementById('classification-image') as HTMLInputElement
+        if (imageInput) imageInput.value = ''
     }
 
     const onSubmit = async (data: ClassificationFormData) => {
@@ -91,6 +105,8 @@ export function ClassificationDialog({
             const imageInput = document.getElementById('classification-image') as HTMLInputElement
             if (imageInput?.files?.[0]) {
                 formData.append('image', imageInput.files[0])
+            } else if (imageDeleted) {
+                formData.append('remove_image', 'true')
             }
 
             const url = isEdit ? `/api/classifications/${classification.id}` : '/api/classifications'
@@ -148,7 +164,18 @@ export function ClassificationDialog({
                             disabled={isSubmitting}
                         />
                         {imagePreview && (
-                            <img src={imagePreview} alt="Preview" className="mt-2 max-h-32 rounded" />
+                            <div className="relative inline-block mt-2">
+                                <img src={imagePreview} alt="Preview" className="max-h-32 rounded" />
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteImage}
+                                    disabled={isSubmitting}
+                                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none"
+                                    title="Remove image"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         )}
                     </div>
 

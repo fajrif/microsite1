@@ -121,7 +121,7 @@ export async function PUT(
 
         // Parse existing samples to update
         const existingSamplesJson = formData.get('existing_samples') as string | null
-        const existingSamplesData: { id: string; name: string; description: string; audio: string; video_link: string; orderNo?: number }[] = existingSamplesJson ? JSON.parse(existingSamplesJson) : []
+        const existingSamplesData: { id: string; name: string; description: string; audio: string; video_link: string; orderNo?: number; remove_audio?: boolean; remove_video?: boolean }[] = existingSamplesJson ? JSON.parse(existingSamplesJson) : []
         const keepSampleIds = existingSamplesData.map((s) => s.id)
 
         // Delete removed samples and their files
@@ -153,18 +153,30 @@ export async function PUT(
                 updateData.image = await uploadFile(newImage)
             }
 
-            // Check if a new audio was uploaded
-            const newAudio = formData.get(`existing_sample_audio_${i}`) as File | null
-            if (newAudio && newAudio.size > 0) {
-                if (oldSample) await deleteBlobIfExists(oldSample.audio)
-                updateData.audio = await uploadFile(newAudio)
+            // Check if audio should be deleted
+            if (s.remove_audio) {
+                if (oldSample?.audio) await deleteBlobIfExists(oldSample.audio)
+                updateData.audio = null
+            } else {
+                // Check if a new audio was uploaded
+                const newAudio = formData.get(`existing_sample_audio_${i}`) as File | null
+                if (newAudio && newAudio.size > 0) {
+                    if (oldSample) await deleteBlobIfExists(oldSample.audio)
+                    updateData.audio = await uploadFile(newAudio)
+                }
             }
 
-            // Check if a new video was uploaded
-            const newVideo = formData.get(`existing_sample_video_${i}`) as File | null
-            if (newVideo && newVideo.size > 0) {
-                if (oldSample) await deleteBlobIfExists(oldSample.video_link)
-                updateData.video_link = await uploadFile(newVideo)
+            // Check if video should be deleted
+            if (s.remove_video) {
+                if (oldSample?.video_link) await deleteBlobIfExists(oldSample.video_link)
+                updateData.video_link = null
+            } else {
+                // Check if a new video was uploaded
+                const newVideo = formData.get(`existing_sample_video_${i}`) as File | null
+                if (newVideo && newVideo.size > 0) {
+                    if (oldSample) await deleteBlobIfExists(oldSample.video_link)
+                    updateData.video_link = await uploadFile(newVideo)
+                }
             }
 
             await prisma.sample.update({

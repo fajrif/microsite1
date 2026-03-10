@@ -56,6 +56,7 @@ export async function PUT(
 
         const formData = await request.formData()
         const image = formData.get('image') as File | null
+        const removeImage = formData.get('remove_image') === 'true'
         let imageUrl: string | null | undefined = undefined
 
         // Get current classification
@@ -64,12 +65,15 @@ export async function PUT(
             select: { image: true },
         })
 
-        // Handle image upload
+        // Handle image upload or removal
         if (image && image.size > 0) {
             if (current?.image) {
                 await deleteFile(current.image)
             }
             imageUrl = await uploadFile(image)
+        } else if (removeImage && current?.image) {
+            await deleteFile(current.image)
+            imageUrl = null
         }
 
         const data = {
