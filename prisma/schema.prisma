@@ -179,3 +179,18 @@ model Metric {
 
   @@map("metrics")
 }
+
+model Banner {
+  id                String   @id @default(uuid())
+  order_no          Int      @default(0)
+  image             String?
+  title             String?
+  caption           String?
+  short_description String?
+  cta_button_text   String?
+  cta_button_href   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("banners")
+}

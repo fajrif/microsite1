@@ -10,7 +10,8 @@ import {
   Inbox,
   X,
   Layers,
-  Presentation
+  Presentation,
+  Image as ImageIcon
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -25,6 +26,7 @@ export default function Sidebar() {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Admins', href: '/admin/admins', icon: Users },
+    { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
     { name: 'Classifications', href: '/admin/classifications', icon: Layers },
     { name: 'Showcases', href: '/admin/showcases', icon: Presentation },
   ]
