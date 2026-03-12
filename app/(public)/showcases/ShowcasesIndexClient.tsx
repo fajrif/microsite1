@@ -48,14 +48,14 @@ export function ShowcasesIndexClient({ classifications }: ShowcasesIndexClientPr
             <div className="container mx-auto py-16 md:py-24 px-4">
                 {/* Headline */}
                 <GradualSpacing
-                    text="五大创意类型最佳实"
+                    text="五大创意核心，为您的品牌先声夺人"
                     className="drop-shadow-sm font-display text-3xl md:text-5xl lg:text-6xl font-bold leading-none -tracking-widest text-[hsl(var(--ptr-primary))] text-center"
                 />
 
                 {/* Subtitle */}
                 <AnimatedDiv id="showcases-short-description" delay={0.1}>
                   <p className="mt-6 text-base md:text-lg text-white max-w-3xl leading-relaxed">
-                      解析顶尖品牌与代理商联手打造的音视频广告标杆案例，看他们如何以故事打动人心，选择正确时间与方式，精准触达目标受众。
+                      汲取全球顶尖创意灵感，探索标杆音视频活动如何玩转“故事力”。 在最合适的时机，用最对的内容，与您的受众产生深度共鸣。
                   </p>
                 </AnimatedDiv>
 

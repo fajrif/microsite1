@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { Play, Pause, SkipBack, SkipForward, Video, Volume2, Loader2 } from 'lucide-react'
+import { Play, Pause, Volume2, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ShowcaseSidebar } from '@/components/ShowcaseSidebar'
 import { GradualSpacing } from '@/components/ui/gradual-spacing'
@@ -246,21 +246,18 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    /* AUDIO: image + bottom player controls */
-                                                    <>
-                                                        <div className="flex-1 flex items-center justify-center overflow-hidden p-3 pt-4">
-                                                            <div className="relative w-full" style={{ aspectRatio: '4/5' }}>
-                                                                <Image
-                                                                    src={activeSample.image}
-                                                                    alt={activeSample.name}
-                                                                    fill
-                                                                    className="object-contain rounded-sm"
-                                                                    unoptimized
-                                                                />
-                                                            </div>
-                                                        </div>
+                                                    /* AUDIO: full-height image with centered play overlay — mirrors video layout */
+                                                    <div className="relative w-full h-full">
+                                                        {/* Cover image fills the entire phone container */}
+                                                        <Image
+                                                            src={activeSample.image}
+                                                            alt={activeSample.name}
+                                                            fill
+                                                            className="absolute inset-0 object-cover z-[5]"
+                                                            unoptimized
+                                                        />
 
-                                                        {/* Audio element (hidden) */}
+                                                        {/* Hidden audio element */}
                                                         {hasAudio && (
                                                             <audio
                                                                 ref={audioRef}
@@ -273,50 +270,29 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                             />
                                                         )}
 
-                                                        {/* Player controls — audio only */}
-                                                        {hasAudio && (
-                                                            <div className="shrink-0 px-4 pb-4 pt-3">
-                                                                {/* Progress bar */}
-                                                                <div className={cn(
-                                                                    "w-full h-[3px] bg-white/20 rounded-full mb-4",
-                                                                    isBuffering && isPlaying && "animate-pulse"
-                                                                )}>
-                                                                    <div
-                                                                        className="h-full rounded-full transition-all duration-100"
-                                                                        style={{ width: `${progress}%`, backgroundColor: 'hsl(var(--ptr-primary))' }}
-                                                                    />
-                                                                </div>
-
-                                                                {/* Controls */}
-                                                                <div className="flex items-center justify-center gap-6">
-                                                                    <button
-                                                                        onClick={prevSample}
-                                                                        className="text-white/40 hover:text-white transition-colors"
-                                                                    >
-                                                                        <SkipBack className="h-4 w-4" />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={togglePlay}
-                                                                        className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform shadow-md"
-                                                                    >
-                                                                        {isBuffering && isPlaying ? (
-                                                                            <Loader2 className="h-4 w-4 text-black animate-spin" />
-                                                                        ) : isPlaying ? (
-                                                                            <Pause className="h-4 w-4 text-black" />
-                                                                        ) : (
-                                                                            <Play className="h-4 w-4 text-black ml-0.5" />
-                                                                        )}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={nextSampleFn}
-                                                                        className="text-white/40 hover:text-white transition-colors"
-                                                                    >
-                                                                        <SkipForward className="h-4 w-4" />
-                                                                    </button>
-                                                                </div>
+                                                        {/* Centered play/pause overlay — identical to video */}
+                                                        <button
+                                                            onClick={togglePlay}
+                                                            className="absolute inset-0 flex items-center justify-center z-10 group"
+                                                        >
+                                                            <div className={cn(
+                                                                'w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center transition-all duration-300',
+                                                                isBuffering && isPlaying
+                                                                    ? 'opacity-100'
+                                                                    : isPlaying
+                                                                        ? 'opacity-0 group-hover:opacity-100'
+                                                                        : 'opacity-100'
+                                                            )}>
+                                                                {isBuffering && isPlaying ? (
+                                                                    <Loader2 className="h-6 w-6 text-white animate-spin" />
+                                                                ) : isPlaying ? (
+                                                                    <Pause className="h-6 w-6 text-white" />
+                                                                ) : (
+                                                                    <Play className="h-6 w-6 text-white ml-0.5" />
+                                                                )}
                                                             </div>
-                                                        )}
-                                                    </>
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         )}
