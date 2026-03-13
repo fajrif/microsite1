@@ -75,18 +75,26 @@ export async function POST(request: Request) {
         }
 
         const formData = await request.formData()
-        const image = formData.get('image') as File | null
         let imageUrl: string | null = null
 
-        // Handle main image upload
-        if (image && image.size > 0) {
-            imageUrl = await uploadFile(image, image.name)
+        // Handle main image: pre-uploaded URL or file upload
+        const imageUrlStr = formData.get('image_url') as string | null
+        if (imageUrlStr) {
+            imageUrl = imageUrlStr
+        } else {
+            const image = formData.get('image') as File | null
+            if (image && image.size > 0) {
+                imageUrl = await uploadFile(image, image.name)
+            }
         }
 
-        // Handle gallery images upload
+        // Handle gallery images: pre-uploaded URLs or file uploads
         const galleryImages: string[] = []
+        const galleryUrlsJson = formData.get('gallery_image_urls') as string | null
+        if (galleryUrlsJson) {
+            galleryImages.push(...JSON.parse(galleryUrlsJson))
+        }
         const galleryFiles = formData.getAll('gallery_images') as File[]
-
         for (const file of galleryFiles) {
             if (file && file.size > 0) {
                 galleryImages.push(await uploadFile(file, file.name))

@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { UploadProgressList } from '@/components/ui/upload-progress'
+import { useFileUpload } from '@/lib/hooks/use-file-upload'
 import { toast } from 'sonner'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -28,9 +30,11 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
     const [error, setError] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null)
+    const [imageFile, setImageFile] = useState<File | null>(null)
     const [galleryPreviews, setGalleryPreviews] = useState<string[]>(initialData?.gallery_images || [])
     const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([])
     const isEdit = !!initialData
+    const upload = useFileUpload()
 
     // Set up default values including today's date for published_date
     const defaultValues = {
@@ -102,22 +106,52 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
                 }
             })
 
-            const imageInput = document.getElementById('image') as HTMLInputElement
-            if (imageInput?.files?.[0]) {
-                formData.append('image', imageInput.files[0])
+            // Collect all files to upload
+            const filesToUpload: File[] = []
+            const fileLabels: string[] = [] // track which file is what
+
+            if (imageFile) {
+                filesToUpload.push(imageFile)
+                fileLabels.push('featured')
             }
 
-            // Handle gallery images
+            for (const file of newGalleryFiles) {
+                filesToUpload.push(file)
+                fileLabels.push('gallery')
+            }
+
+            // Pre-upload all files with progress
+            if (filesToUpload.length > 0) {
+                const results = await upload.uploadFiles(filesToUpload)
+                const urls = Array.from(results.values())
+
+                if (urls.length !== filesToUpload.length) {
+                    throw new Error('Some files failed to upload')
+                }
+
+                let urlIndex = 0
+
+                // Set featured image URL
+                if (imageFile) {
+                    formData.set('image_url', urls[urlIndex])
+                    urlIndex++
+                }
+
+                // Set gallery image URLs
+                const galleryUrls: string[] = []
+                for (let i = urlIndex; i < urls.length; i++) {
+                    galleryUrls.push(urls[i])
+                }
+                if (galleryUrls.length > 0) {
+                    formData.set('gallery_image_urls', JSON.stringify(galleryUrls))
+                }
+            }
+
+            // Handle existing gallery images for edit
             if (isEdit) {
-                // For edit: send existing gallery URLs that weren't removed
                 const existingGallery = galleryPreviews.filter(url => !url.startsWith('data:'))
                 formData.append('existing_gallery_images', JSON.stringify(existingGallery))
             }
-
-            // Append new gallery files
-            newGalleryFiles.forEach(file => {
-                formData.append('gallery_images', file)
-            })
 
             const url = isEdit ? `/api/articles/${initialData.id}` : '/api/articles'
             const response = await fetch(url, {
@@ -146,6 +180,7 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
+            setImageFile(file)
             const reader = new FileReader()
             reader.onloadend = () => {
                 setImagePreview(reader.result as string)
@@ -191,6 +226,15 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
                     {error}
                 </div>
+            )}
+
+            {/* Upload Progress */}
+            {upload.items.length > 0 && (
+                <UploadProgressList
+                    items={upload.items}
+                    overallProgress={upload.overallProgress}
+                    onCancel={() => upload.abort()}
+                />
             )}
 
             {/* Featured Image */}
@@ -300,7 +344,7 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
                             disabled={!editor}
                             className={`px-3 py-1 rounded ${editor?.isActive('bulletList') ? 'bg-gray-200' : 'bg-white'} border hover:bg-gray-100 disabled:opacity-50`}
                         >
-                            • List
+                            &bull; List
                         </button>
                         <button
                             type="button"
@@ -316,7 +360,7 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
                             disabled={!editor}
                             className={`px-3 py-1 rounded ${editor?.isActive('blockquote') ? 'bg-gray-200' : 'bg-white'} border hover:bg-gray-100 disabled:opacity-50`}
                         >
-                            " Quote
+                            &quot; Quote
                         </button>
                     </div>
                     {/* Editor Content */}
@@ -388,8 +432,8 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-4 pt-4">
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Saving...' : isEdit ? 'Update Article' : 'Create Article'}
+                <Button type="submit" disabled={isSubmitting || upload.isUploading}>
+                    {upload.isUploading ? 'Uploading...' : isSubmitting ? 'Saving...' : isEdit ? 'Update Article' : 'Create Article'}
                 </Button>
                 <Link href="/admin/articles">
                     <Button type="button" variant="outline" disabled={isSubmitting}>

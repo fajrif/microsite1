@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { UploadProgressList } from '@/components/ui/upload-progress'
+import { useFileUpload } from '@/lib/hooks/use-file-upload'
 import { toast } from 'sonner'
 import { Plus, X } from 'lucide-react'
 
@@ -51,6 +53,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
     const [error, setError] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const isEdit = !!initialData
+    const upload = useFileUpload()
 
     const {
         register,
@@ -237,6 +240,60 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
         setError('')
 
         try {
+            // Collect all files to upload
+            const filesToUpload: File[] = []
+            const fileMapping: { sampleIndex: number; type: 'image' | 'audio' | 'video'; isExisting: boolean }[] = []
+
+            for (let i = 0; i < samples.length; i++) {
+                const sample = samples[i]
+
+                if (sample.isExisting && sample.id) {
+                    // Validate: existing sample with cleared image must have a new image
+                    if (sample.imageClearRequested && !sample.imageFile) {
+                        setError(`Sample "${sample.name || `#${i + 1}`}": A new image is required after clearing`)
+                        setIsSubmitting(false)
+                        return
+                    }
+                } else {
+                    if (!sample.imageFile) {
+                        setError(`Sample "${sample.name || `#${i + 1}`}": Image is required`)
+                        setIsSubmitting(false)
+                        return
+                    }
+                }
+
+                if (sample.imageFile) {
+                    filesToUpload.push(sample.imageFile)
+                    fileMapping.push({ sampleIndex: i, type: 'image', isExisting: sample.isExisting })
+                }
+                if (sample.audioFile) {
+                    filesToUpload.push(sample.audioFile)
+                    fileMapping.push({ sampleIndex: i, type: 'audio', isExisting: sample.isExisting })
+                }
+                if (sample.videoFile) {
+                    filesToUpload.push(sample.videoFile)
+                    fileMapping.push({ sampleIndex: i, type: 'video', isExisting: sample.isExisting })
+                }
+            }
+
+            // Pre-upload all files with progress
+            const uploadedUrls: Map<number, string> = new Map()
+            if (filesToUpload.length > 0) {
+                const results = await upload.uploadFiles(filesToUpload)
+                const resultEntries = Array.from(results.entries())
+
+                if (resultEntries.length !== filesToUpload.length) {
+                    throw new Error('Some files failed to upload')
+                }
+
+                // Map results back by index
+                const urlValues = Array.from(results.values())
+                for (let i = 0; i < urlValues.length; i++) {
+                    uploadedUrls.set(i, urlValues[i])
+                }
+            }
+
+            // Build form data
             const formData = new FormData()
 
             // Append showcase fields
@@ -246,20 +303,16 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 }
             })
 
-            // Separate existing and new samples
-            const existingSamples: { id: string; name: string; description: string; audio: string; video_link: string; orderNo: number; remove_audio?: boolean; remove_video?: boolean }[] = []
-            const newSamples: { name: string; description: string; audio: string; video_link: string; orderNo: number }[] = []
-            let newSampleIndex = 0
+            // Build sample data with uploaded URLs
+            const existingSamples: any[] = []
+            const newSamples: any[] = []
             let existingSampleIndex = 0
+            let newSampleIndex = 0
 
-            for (const sample of samples) {
+            for (let i = 0; i < samples.length; i++) {
+                const sample = samples[i]
+
                 if (sample.isExisting && sample.id) {
-                    // Validate: existing sample with cleared image must have a new image
-                    if (sample.imageClearRequested && !sample.imageFile) {
-                        setError(`Sample "${sample.name || `#${existingSampleIndex + 1}`}": A new image is required after clearing`)
-                        setIsSubmitting(false)
-                        return
-                    }
                     existingSamples.push({
                         id: sample.id,
                         name: sample.name,
@@ -270,22 +323,25 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         remove_audio: sample.audioDeleted,
                         remove_video: sample.videoDeleted,
                     })
-                    if (sample.imageFile) {
-                        formData.append(`existing_sample_image_${existingSampleIndex}`, sample.imageFile)
-                    }
-                    if (sample.audioFile) {
-                        formData.append(`existing_sample_audio_${existingSampleIndex}`, sample.audioFile)
-                    }
-                    if (sample.videoFile) {
-                        formData.append(`existing_sample_video_${existingSampleIndex}`, sample.videoFile)
+
+                    // Set pre-uploaded URLs for this existing sample
+                    for (let fi = 0; fi < fileMapping.length; fi++) {
+                        const mapping = fileMapping[fi]
+                        if (mapping.sampleIndex === i && mapping.isExisting) {
+                            const url = uploadedUrls.get(fi)
+                            if (url) {
+                                if (mapping.type === 'image') {
+                                    formData.append(`existing_sample_image_url_${existingSampleIndex}`, url)
+                                } else if (mapping.type === 'audio') {
+                                    formData.append(`existing_sample_audio_url_${existingSampleIndex}`, url)
+                                } else if (mapping.type === 'video') {
+                                    formData.append(`existing_sample_video_url_${existingSampleIndex}`, url)
+                                }
+                            }
+                        }
                     }
                     existingSampleIndex++
                 } else {
-                    if (!sample.imageFile) {
-                        setError(`Sample "${sample.name || `#${newSampleIndex + 1}`}": Image is required`)
-                        setIsSubmitting(false)
-                        return
-                    }
                     newSamples.push({
                         name: sample.name,
                         description: sample.description,
@@ -293,12 +349,22 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         video_link: '',
                         orderNo: sample.orderNo,
                     })
-                    formData.append(`sample_image_${newSampleIndex}`, sample.imageFile)
-                    if (sample.audioFile) {
-                        formData.append(`sample_audio_${newSampleIndex}`, sample.audioFile)
-                    }
-                    if (sample.videoFile) {
-                        formData.append(`sample_video_${newSampleIndex}`, sample.videoFile)
+
+                    // Set pre-uploaded URLs for this new sample
+                    for (let fi = 0; fi < fileMapping.length; fi++) {
+                        const mapping = fileMapping[fi]
+                        if (mapping.sampleIndex === i && !mapping.isExisting) {
+                            const url = uploadedUrls.get(fi)
+                            if (url) {
+                                if (mapping.type === 'image') {
+                                    formData.append(`sample_image_url_${newSampleIndex}`, url)
+                                } else if (mapping.type === 'audio') {
+                                    formData.append(`sample_audio_url_${newSampleIndex}`, url)
+                                } else if (mapping.type === 'video') {
+                                    formData.append(`sample_video_url_${newSampleIndex}`, url)
+                                }
+                            }
+                        }
                     }
                     newSampleIndex++
                 }
@@ -345,6 +411,15 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
                     {error}
                 </div>
+            )}
+
+            {/* Upload Progress */}
+            {upload.items.length > 0 && (
+                <UploadProgressList
+                    items={upload.items}
+                    overallProgress={upload.overallProgress}
+                    onCancel={() => upload.abort()}
+                />
             )}
 
             {/* Basic Fields */}
@@ -498,7 +573,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                                             className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none"
                                             title="Clear image (new image required)"
                                         >
-                                            ×
+                                            &times;
                                         </button>
                                     </div>
                                 )}
@@ -688,8 +763,8 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
 
             {/* Action Buttons */}
             <div className="flex items-center gap-4 pt-4">
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Saving...' : isEdit ? 'Update Showcase' : 'Create Showcase'}
+                <Button type="submit" disabled={isSubmitting || upload.isUploading}>
+                    {upload.isUploading ? 'Uploading...' : isSubmitting ? 'Saving...' : isEdit ? 'Update Showcase' : 'Create Showcase'}
                 </Button>
                 <Link href="/admin/showcases">
                     <Button type="button" variant="outline" disabled={isSubmitting}>

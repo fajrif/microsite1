@@ -26,11 +26,17 @@ export async function POST(request: Request) {
         }
 
         const formData = await request.formData()
-        const imageFile = formData.get('image') as File | null
         let imageUrl: string | null = null
 
-        if (imageFile && imageFile.size > 0) {
-            imageUrl = await uploadFile(imageFile, imageFile.name)
+        // Check for pre-uploaded URL first, then fall back to file upload
+        const imageUrlStr = formData.get('image_url') as string | null
+        if (imageUrlStr) {
+            imageUrl = imageUrlStr
+        } else {
+            const imageFile = formData.get('image') as File | null
+            if (imageFile && imageFile.size > 0) {
+                imageUrl = await uploadFile(imageFile, imageFile.name)
+            }
         }
 
         const banner = await prisma.banner.create({

@@ -41,7 +41,15 @@ export async function uploadFile(file: File, filename?: string): Promise<string>
   const oss = getOssClient()
   if (oss) {
     const objectKey = `uploads/${Date.now()}-${name}`
-    await oss.put(objectKey, buffer)
+    // Use multipart upload for files > 50MB
+    if (buffer.length > 50 * 1024 * 1024) {
+      await oss.multipartUpload(objectKey, buffer, {
+        parallel: 4,
+        partSize: 5 * 1024 * 1024, // 5MB parts
+      })
+    } else {
+      await oss.put(objectKey, buffer)
+    }
     return getOssUrl(objectKey)
   }
 

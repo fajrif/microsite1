@@ -69,9 +69,14 @@ export async function PUT(
             select: { image: true, gallery_images: true }
         })
 
-        // Handle image upload if new image provided
-        if (image && image.size > 0) {
-            // Delete old main image if exists
+        // Handle image: pre-uploaded URL or file upload
+        const imageUrlStr = formData.get('image_url') as string | null
+        if (imageUrlStr) {
+            if (currentArticle?.image) {
+                await deleteStoredFile(currentArticle.image)
+            }
+            imageUrl = imageUrlStr
+        } else if (image && image.size > 0) {
             if (currentArticle?.image) {
                 await deleteStoredFile(currentArticle.image)
             }
@@ -83,8 +88,12 @@ export async function PUT(
         const existingGalleryJson = formData.get('existing_gallery_images') as string | null
         const existingGallery = existingGalleryJson ? JSON.parse(existingGalleryJson) : []
 
+        // Pre-uploaded gallery URLs
+        const galleryUrlsJson = formData.get('gallery_image_urls') as string | null
+        const newGalleryUrls: string[] = galleryUrlsJson ? JSON.parse(galleryUrlsJson) : []
+
         const galleryFiles = formData.getAll('gallery_images') as File[]
-        const newGalleryImages: string[] = []
+        const newGalleryImages: string[] = [...newGalleryUrls]
 
         for (const file of galleryFiles) {
             if (file && file.size > 0) {

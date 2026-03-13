@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { UploadProgressList } from '@/components/ui/upload-progress'
+import { useFileUpload } from '@/lib/hooks/use-file-upload'
 import { toast } from 'sonner'
 
 interface BannerFormProps {
@@ -28,10 +30,13 @@ export function BannerForm({ initialData }: BannerFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState('')
     const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image ?? null)
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const upload = useFileUpload()
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
+            setImageFile(file)
             const reader = new FileReader()
             reader.onloadend = () => setImagePreview(reader.result as string)
             reader.readAsDataURL(file)
@@ -46,12 +51,16 @@ export function BannerForm({ initialData }: BannerFormProps) {
         try {
             const form = e.currentTarget
             const formData = new FormData(form)
+            formData.delete('image')
 
-            const imageInput = form.querySelector<HTMLInputElement>('#image')
-            if (imageInput?.files?.[0]) {
-                formData.set('image', imageInput.files[0])
-            } else {
-                formData.delete('image')
+            // Pre-upload image file with progress
+            if (imageFile) {
+                const results = await upload.uploadFiles([imageFile])
+                const urls = Array.from(results.values())
+                if (urls.length === 0) {
+                    throw new Error('Image upload failed')
+                }
+                formData.set('image_url', urls[0])
             }
 
             const url = isEdit ? `/api/banners/${initialData.id}` : '/api/banners'
@@ -82,6 +91,15 @@ export function BannerForm({ initialData }: BannerFormProps) {
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
                     {error}
                 </div>
+            )}
+
+            {/* Upload Progress */}
+            {upload.items.length > 0 && (
+                <UploadProgressList
+                    items={upload.items}
+                    overallProgress={upload.overallProgress}
+                    onCancel={() => upload.abort()}
+                />
             )}
 
             {/* Order No */}
@@ -171,8 +189,8 @@ export function BannerForm({ initialData }: BannerFormProps) {
 
             {/* Actions */}
             <div className="flex items-center gap-4 pt-4">
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Saving...' : isEdit ? 'Update Banner' : 'Create Banner'}
+                <Button type="submit" disabled={isSubmitting || upload.isUploading}>
+                    {upload.isUploading ? 'Uploading...' : isSubmitting ? 'Saving...' : isEdit ? 'Update Banner' : 'Create Banner'}
                 </Button>
                 <Link href="/admin/banners">
                     <Button type="button" variant="outline" disabled={isSubmitting}>

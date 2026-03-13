@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['ali-oss'],
   experimental: {
     serverActions: {
-      bodySizeLimit: '100mb',
+      bodySizeLimit: '500mb',
     },
   },
   images: {

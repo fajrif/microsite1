@@ -149,11 +149,17 @@ export async function PUT(
                 orderNo: s.orderNo ?? 0,
             }
 
-            // Check if a new image was uploaded for this existing sample
-            const newImage = formData.get(`existing_sample_image_${i}`) as File | null
-            if (newImage && newImage.size > 0) {
+            // Check for pre-uploaded image URL or new file upload
+            const existingImageUrl = formData.get(`existing_sample_image_url_${i}`) as string | null
+            if (existingImageUrl) {
                 if (oldSample) await deleteBlobIfExists(oldSample.image)
-                updateData.image = await uploadFile(newImage)
+                updateData.image = existingImageUrl
+            } else {
+                const newImage = formData.get(`existing_sample_image_${i}`) as File | null
+                if (newImage && newImage.size > 0) {
+                    if (oldSample) await deleteBlobIfExists(oldSample.image)
+                    updateData.image = await uploadFile(newImage)
+                }
             }
 
             // Check if audio should be deleted
@@ -161,11 +167,17 @@ export async function PUT(
                 if (oldSample?.audio) await deleteBlobIfExists(oldSample.audio)
                 updateData.audio = null
             } else {
-                // Check if a new audio was uploaded
-                const newAudio = formData.get(`existing_sample_audio_${i}`) as File | null
-                if (newAudio && newAudio.size > 0) {
+                // Check for pre-uploaded audio URL or new file upload
+                const existingAudioUrl = formData.get(`existing_sample_audio_url_${i}`) as string | null
+                if (existingAudioUrl) {
                     if (oldSample) await deleteBlobIfExists(oldSample.audio)
-                    updateData.audio = await uploadFile(newAudio)
+                    updateData.audio = existingAudioUrl
+                } else {
+                    const newAudio = formData.get(`existing_sample_audio_${i}`) as File | null
+                    if (newAudio && newAudio.size > 0) {
+                        if (oldSample) await deleteBlobIfExists(oldSample.audio)
+                        updateData.audio = await uploadFile(newAudio)
+                    }
                 }
             }
 
@@ -174,11 +186,17 @@ export async function PUT(
                 if (oldSample?.video_link) await deleteBlobIfExists(oldSample.video_link)
                 updateData.video_link = null
             } else {
-                // Check if a new video was uploaded
-                const newVideo = formData.get(`existing_sample_video_${i}`) as File | null
-                if (newVideo && newVideo.size > 0) {
+                // Check for pre-uploaded video URL or new file upload
+                const existingVideoUrl = formData.get(`existing_sample_video_url_${i}`) as string | null
+                if (existingVideoUrl) {
                     if (oldSample) await deleteBlobIfExists(oldSample.video_link)
-                    updateData.video_link = await uploadFile(newVideo)
+                    updateData.video_link = existingVideoUrl
+                } else {
+                    const newVideo = formData.get(`existing_sample_video_${i}`) as File | null
+                    if (newVideo && newVideo.size > 0) {
+                        if (oldSample) await deleteBlobIfExists(oldSample.video_link)
+                        updateData.video_link = await uploadFile(newVideo)
+                    }
                 }
             }
 
@@ -190,29 +208,45 @@ export async function PUT(
 
         // Create new samples
         for (let i = 0; i < samplesData.length; i++) {
-            const sampleImage = formData.get(`sample_image_${i}`) as File | null
+            // Check for pre-uploaded image URL first
+            const sampleImageUrl = formData.get(`sample_image_url_${i}`) as string | null
+            let imageUrl: string
 
-            if (!sampleImage || sampleImage.size === 0) {
-                return NextResponse.json(
-                    { error: `New sample ${i + 1}: Image is required` },
-                    { status: 400 }
-                )
+            if (sampleImageUrl) {
+                imageUrl = sampleImageUrl
+            } else {
+                const sampleImage = formData.get(`sample_image_${i}`) as File | null
+                if (!sampleImage || sampleImage.size === 0) {
+                    return NextResponse.json(
+                        { error: `New sample ${i + 1}: Image is required` },
+                        { status: 400 }
+                    )
+                }
+                imageUrl = await uploadFile(sampleImage)
             }
 
-            const imageUrl = await uploadFile(sampleImage)
-
-            // Handle audio file upload
-            const sampleAudio = formData.get(`sample_audio_${i}`) as File | null
+            // Handle audio: pre-uploaded URL or file upload
+            const sampleAudioUrl = formData.get(`sample_audio_url_${i}`) as string | null
             let audioUrl = samplesData[i].audio || null
-            if (sampleAudio && sampleAudio.size > 0) {
-                audioUrl = await uploadFile(sampleAudio)
+            if (sampleAudioUrl) {
+                audioUrl = sampleAudioUrl
+            } else {
+                const sampleAudio = formData.get(`sample_audio_${i}`) as File | null
+                if (sampleAudio && sampleAudio.size > 0) {
+                    audioUrl = await uploadFile(sampleAudio)
+                }
             }
 
-            // Handle video file upload
-            const sampleVideo = formData.get(`sample_video_${i}`) as File | null
+            // Handle video: pre-uploaded URL or file upload
+            const sampleVideoUrl = formData.get(`sample_video_url_${i}`) as string | null
             let videoUrl = samplesData[i].video_link || null
-            if (sampleVideo && sampleVideo.size > 0) {
-                videoUrl = await uploadFile(sampleVideo)
+            if (sampleVideoUrl) {
+                videoUrl = sampleVideoUrl
+            } else {
+                const sampleVideo = formData.get(`sample_video_${i}`) as File | null
+                if (sampleVideo && sampleVideo.size > 0) {
+                    videoUrl = await uploadFile(sampleVideo)
+                }
             }
 
             await prisma.sample.create({

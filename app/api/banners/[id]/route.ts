@@ -35,16 +35,25 @@ export async function PUT(
         }
 
         const formData = await request.formData()
-        const imageFile = formData.get('image') as File | null
 
         const current = await prisma.banner.findUnique({ where: { id }, select: { image: true } })
         let imageUrl: string | null | undefined = undefined
 
-        if (imageFile && imageFile.size > 0) {
+        // Check for pre-uploaded URL first, then fall back to file upload
+        const imageUrlStr = formData.get('image_url') as string | null
+        if (imageUrlStr) {
             if (current?.image) {
                 try { await deleteFile(current.image) } catch {}
             }
-            imageUrl = await uploadFile(imageFile, imageFile.name)
+            imageUrl = imageUrlStr
+        } else {
+            const imageFile = formData.get('image') as File | null
+            if (imageFile && imageFile.size > 0) {
+                if (current?.image) {
+                    try { await deleteFile(current.image) } catch {}
+                }
+                imageUrl = await uploadFile(imageFile, imageFile.name)
+            }
         }
 
         const data: any = {

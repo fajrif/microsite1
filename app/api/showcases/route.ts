@@ -123,29 +123,45 @@ export async function POST(request: Request) {
         // Upload sample files
         const sampleCreates = []
         for (let i = 0; i < samplesData.length; i++) {
-            const sampleImage = formData.get(`sample_image_${i}`) as File | null
+            // Check for pre-uploaded image URL first
+            const sampleImageUrl = formData.get(`sample_image_url_${i}`) as string | null
+            let imageUrl: string
 
-            if (!sampleImage || sampleImage.size === 0) {
-                return NextResponse.json(
-                    { error: `Sample ${i + 1}: Image is required` },
-                    { status: 400 }
-                )
+            if (sampleImageUrl) {
+                imageUrl = sampleImageUrl
+            } else {
+                const sampleImage = formData.get(`sample_image_${i}`) as File | null
+                if (!sampleImage || sampleImage.size === 0) {
+                    return NextResponse.json(
+                        { error: `Sample ${i + 1}: Image is required` },
+                        { status: 400 }
+                    )
+                }
+                imageUrl = await uploadFile(sampleImage)
             }
 
-            const imageUrl = await uploadFile(sampleImage)
-
-            // Handle audio file upload
-            const sampleAudio = formData.get(`sample_audio_${i}`) as File | null
+            // Handle audio: pre-uploaded URL or file upload
+            const sampleAudioUrl = formData.get(`sample_audio_url_${i}`) as string | null
             let audioUrl = samplesData[i].audio || null
-            if (sampleAudio && sampleAudio.size > 0) {
-                audioUrl = await uploadFile(sampleAudio)
+            if (sampleAudioUrl) {
+                audioUrl = sampleAudioUrl
+            } else {
+                const sampleAudio = formData.get(`sample_audio_${i}`) as File | null
+                if (sampleAudio && sampleAudio.size > 0) {
+                    audioUrl = await uploadFile(sampleAudio)
+                }
             }
 
-            // Handle video file upload
-            const sampleVideo = formData.get(`sample_video_${i}`) as File | null
+            // Handle video: pre-uploaded URL or file upload
+            const sampleVideoUrl = formData.get(`sample_video_url_${i}`) as string | null
             let videoUrl = samplesData[i].video_link || null
-            if (sampleVideo && sampleVideo.size > 0) {
-                videoUrl = await uploadFile(sampleVideo)
+            if (sampleVideoUrl) {
+                videoUrl = sampleVideoUrl
+            } else {
+                const sampleVideo = formData.get(`sample_video_${i}`) as File | null
+                if (sampleVideo && sampleVideo.size > 0) {
+                    videoUrl = await uploadFile(sampleVideo)
+                }
             }
 
             sampleCreates.push({
