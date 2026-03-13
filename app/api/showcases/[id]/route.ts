@@ -6,6 +6,9 @@ import { showcaseSchema } from '@/lib/validations/showcase'
 import { generateSlug } from '@/lib/slug'
 import { uploadFile, deleteFile as deleteBlobIfExists } from '@/lib/storage'
 
+// Allow up to 5 minutes for large file uploads
+export const maxDuration = 300
+
 // GET /api/showcases/[id]
 export async function GET(
     request: Request,
