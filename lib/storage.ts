@@ -6,7 +6,7 @@ import path from 'path'
 import fs from 'fs/promises'
 import os from 'os'
 
-let ossClient: any = null
+let ossClient: any = null  // Reset on server restart; uses HTTPS
 
 function getOssClient() {
   if (ossClient) return ossClient
@@ -18,6 +18,7 @@ function getOssClient() {
     accessKeyId: process.env.OSS_ACCESS_KEY_ID!,
     accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET!,
     bucket: process.env.OSS_BUCKET!,
+    secure: true, // Use HTTPS to avoid socket hang ups
     timeout: 300_000, // 5 minutes
   })
   return ossClient
@@ -48,8 +49,9 @@ export async function uploadFile(file: File, filename?: string): Promise<string>
       try {
         await fs.writeFile(tmpFile, buffer)
         await oss.multipartUpload(objectKey, tmpFile, {
-          parallel: 4,
-          partSize: 5 * 1024 * 1024, // 5MB parts
+          parallel: 2,
+          partSize: 10 * 1024 * 1024, // 10MB parts — fewer, larger parts are more reliable
+          timeout: 600_000, // 10 minutes for multipart
         })
       } finally {
         await fs.unlink(tmpFile).catch(() => {})
