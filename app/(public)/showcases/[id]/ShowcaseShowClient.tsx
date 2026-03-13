@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Play, Pause, Volume2, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -67,6 +67,16 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
     const [progress, setProgress] = useState(0)
     const videoRef = useRef<HTMLVideoElement>(null)
     const audioRef = useRef<HTMLAudioElement>(null)
+    const mobileVideoRef = useRef<HTMLVideoElement>(null)
+    const mobileAudioRef = useRef<HTMLAudioElement>(null)
+
+    const getActiveRefs = () => {
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+        return {
+            video: isMobile ? mobileVideoRef : videoRef,
+            audio: isMobile ? mobileAudioRef : audioRef,
+        }
+    }
     const activeSample = showcase.samples[activeSampleIndex]
 
     const hasVideo = !!activeSample?.video_link
@@ -78,39 +88,45 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
         setIsPlaying(false)
         setIsBuffering(false)
         setProgress(0)
-        if (videoRef.current) {
-            videoRef.current.pause()
-            videoRef.current.currentTime = 0
-        }
-        if (audioRef.current) {
-            audioRef.current.pause()
-            audioRef.current.currentTime = 0
-        }
+        ;[videoRef, mobileVideoRef].forEach(ref => {
+            if (ref.current) {
+                ref.current.pause()
+                ref.current.currentTime = 0
+            }
+        })
+        ;[audioRef, mobileAudioRef].forEach(ref => {
+            if (ref.current) {
+                ref.current.pause()
+                ref.current.currentTime = 0
+            }
+        })
     }, [activeSampleIndex])
 
     const handleWaiting = () => setIsBuffering(true)
     const handleCanPlay = () => setIsBuffering(false)
 
     const togglePlay = () => {
-        if (hasVideo && videoRef.current) {
+        const { video, audio } = getActiveRefs()
+        if (hasVideo && video.current) {
             if (isPlaying) {
-                videoRef.current.pause()
+                video.current.pause()
             } else {
-                videoRef.current.play()
+                video.current.play()
             }
             setIsPlaying(!isPlaying)
-        } else if (hasAudio && audioRef.current) {
+        } else if (hasAudio && audio.current) {
             if (isPlaying) {
-                audioRef.current.pause()
+                audio.current.pause()
             } else {
-                audioRef.current.play()
+                audio.current.play()
             }
             setIsPlaying(!isPlaying)
         }
     }
 
     const handleTimeUpdate = () => {
-        const el = hasVideo ? videoRef.current : audioRef.current
+        const { video, audio } = getActiveRefs()
+        const el = hasVideo ? video.current : audio.current
         if (!el) return
         const pct = (el.currentTime / el.duration) * 100
         setProgress(pct || 0)
@@ -162,11 +178,14 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
         </button>
     )
 
-    const renderPhonePlayerContent = () => (
+    const renderPhonePlayerContent = (
+        vRef: React.RefObject<HTMLVideoElement | null> = videoRef,
+        aRef: React.RefObject<HTMLAudioElement | null> = audioRef
+    ) => (
         hasVideo ? (
             <div className="relative w-full h-full">
                 <video
-                    ref={videoRef}
+                    ref={vRef}
                     src={activeSample.video_link!}
                     onTimeUpdate={handleTimeUpdate}
                     onEnded={handleEnded}
@@ -198,7 +217,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                 />
                 {hasAudio && (
                     <audio
-                        ref={audioRef}
+                        ref={aRef}
                         src={activeSample.audio!}
                         onTimeUpdate={handleTimeUpdate}
                         onEnded={handleEnded}
@@ -296,7 +315,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                                 className="w-[160px] h-[340px] rounded-2xl border-2 overflow-hidden"
                                                                 style={{ borderColor: 'hsl(var(--ptr-primary))' }}
                                                             >
-                                                                {renderPhonePlayerContent()}
+                                                                {renderPhonePlayerContent(mobileVideoRef, mobileAudioRef)}
                                                             </div>
                                                         </div>
                                                     </div>
