@@ -34,7 +34,7 @@ export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
     )?.id
 
     return (
-        <nav className="hidden md:block w-52 flex-shrink-0 font-spotify">
+        <nav className="hidden md:block w-52 flex-shrink-0 font-spotify sticky top-24 self-start max-h-[calc(100vh-7rem)] overflow-y-auto">
             <TreeProvider
                 defaultExpandedIds={activeClassificationId ? [activeClassificationId] : []}
                 showIcons={false}
