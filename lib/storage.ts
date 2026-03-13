@@ -43,14 +43,16 @@ export async function uploadFile(file: File, filename?: string): Promise<string>
   const oss = getOssClient()
   if (oss) {
     const objectKey = `uploads/${Date.now()}-${name}`
-    // Use multipart upload for files > 50MB (requires a file path, not a buffer)
-    if (buffer.length > 50 * 1024 * 1024) {
+    // Use multipart upload only for very large files (> 200MB).
+    // For files under 200MB, a single oss.put() is faster and more reliable
+    // (avoids initiate/complete overhead and is less prone to timeouts).
+    if (buffer.length > 200 * 1024 * 1024) {
       const tmpFile = path.join(os.tmpdir(), `upload-${Date.now()}-${name}`)
       try {
         await fs.writeFile(tmpFile, buffer)
         await oss.multipartUpload(objectKey, tmpFile, {
           parallel: 2,
-          partSize: 10 * 1024 * 1024, // 10MB parts — fewer, larger parts are more reliable
+          partSize: 10 * 1024 * 1024, // 10MB parts
           timeout: 600_000, // 10 minutes for multipart
         })
       } finally {

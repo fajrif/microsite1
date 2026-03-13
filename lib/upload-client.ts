@@ -67,6 +67,10 @@ export function uploadFileWithProgress(
     })
 
     xhr.open('POST', '/api/upload')
+    xhr.timeout = 600_000 // 10 minutes — server needs time to forward to OSS
+    xhr.addEventListener('timeout', () => {
+      reject(new Error('Upload timed out — the server took too long to process the file'))
+    })
     xhr.send(formData)
   })
 }
