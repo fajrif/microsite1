@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { FileOrUrlInput } from '@/components/ui/file-or-url-input'
 import { UploadProgressList } from '@/components/ui/upload-progress'
 import { useFileUpload } from '@/lib/hooks/use-file-upload'
 import { toast } from 'sonner'
@@ -21,12 +22,15 @@ interface SampleEntry {
     description: string
     imageFile: File | null
     imagePreview: string | null
+    imageDirectUrl: string
     imageClearRequested: boolean
     audioFile: File | null
     audioPreview: string | null
+    audioDirectUrl: string
     audioDeleted: boolean
     videoFile: File | null
     videoPreview: string | null
+    videoDirectUrl: string
     videoDeleted: boolean
     orderNo: number
     isExisting: boolean
@@ -86,12 +90,15 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 description: s.description || '',
                 imageFile: null,
                 imagePreview: s.image,
+                imageDirectUrl: '',
                 imageClearRequested: false,
                 audioFile: null,
                 audioPreview: s.audio || null,
+                audioDirectUrl: '',
                 audioDeleted: false,
                 videoFile: null,
                 videoPreview: s.video_link || null,
+                videoDirectUrl: '',
                 videoDeleted: false,
                 orderNo: s.orderNo ?? 0,
                 isExisting: true,
@@ -123,12 +130,15 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             description: '',
             imageFile: null,
             imagePreview: null,
+            imageDirectUrl: '',
             imageClearRequested: false,
             audioFile: null,
             audioPreview: null,
+            audioDirectUrl: '',
             audioDeleted: false,
             videoFile: null,
             videoPreview: null,
+            videoDirectUrl: '',
             videoDeleted: false,
             orderNo: 0,
             isExisting: false,
@@ -145,18 +155,21 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
         setSamples(updated)
     }
 
-    const handleSampleImage = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
+    const handleSampleImageFile = (index: number, file: File | null) => {
+        const updated = [...samples]
         if (file) {
             const reader = new FileReader()
             reader.onloadend = () => {
-                const updated = [...samples]
                 updated[index].imageFile = file
                 updated[index].imagePreview = reader.result as string
+                updated[index].imageDirectUrl = ''
                 updated[index].imageClearRequested = false
-                setSamples(updated)
+                setSamples([...updated])
             }
             reader.readAsDataURL(file)
+        } else {
+            updated[index].imageFile = null
+            setSamples(updated)
         }
     }
 
@@ -164,48 +177,55 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
         const updated = [...samples]
         updated[index].imageFile = null
         updated[index].imagePreview = null
+        updated[index].imageDirectUrl = ''
         updated[index].imageClearRequested = true
         setSamples(updated)
         const input = document.getElementById(`sample-image-${index}`) as HTMLInputElement
         if (input) input.value = ''
     }
 
-    const handleSampleAudio = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
+    const handleSampleAudioFile = (index: number, file: File | null) => {
+        const updated = [...samples]
         if (file) {
-            const updated = [...samples]
             updated[index].audioFile = file
             updated[index].audioPreview = file.name
+            updated[index].audioDirectUrl = ''
             updated[index].audioDeleted = false
-            setSamples(updated)
+        } else {
+            updated[index].audioFile = null
         }
+        setSamples(updated)
     }
 
     const handleDeleteSampleAudio = (index: number) => {
         const updated = [...samples]
         updated[index].audioFile = null
         updated[index].audioPreview = null
+        updated[index].audioDirectUrl = ''
         updated[index].audioDeleted = true
         setSamples(updated)
         const input = document.getElementById(`sample-audio-${index}`) as HTMLInputElement
         if (input) input.value = ''
     }
 
-    const handleSampleVideo = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
+    const handleSampleVideoFile = (index: number, file: File | null) => {
+        const updated = [...samples]
         if (file) {
-            const updated = [...samples]
             updated[index].videoFile = file
             updated[index].videoPreview = file.name
+            updated[index].videoDirectUrl = ''
             updated[index].videoDeleted = false
-            setSamples(updated)
+        } else {
+            updated[index].videoFile = null
         }
+        setSamples(updated)
     }
 
     const handleDeleteSampleVideo = (index: number) => {
         const updated = [...samples]
         updated[index].videoFile = null
         updated[index].videoPreview = null
+        updated[index].videoDirectUrl = ''
         updated[index].videoDeleted = true
         setSamples(updated)
         const input = document.getElementById(`sample-video-${index}`) as HTMLInputElement
@@ -240,7 +260,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
         setError('')
 
         try {
-            // Collect all files to upload
+            // Collect only files that need uploading (skip samples with direct URLs)
             const filesToUpload: File[] = []
             const fileMapping: { sampleIndex: number; type: 'image' | 'audio' | 'video'; isExisting: boolean }[] = []
 
@@ -248,35 +268,35 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 const sample = samples[i]
 
                 if (sample.isExisting && sample.id) {
-                    // Validate: existing sample with cleared image must have a new image
-                    if (sample.imageClearRequested && !sample.imageFile) {
+                    if (sample.imageClearRequested && !sample.imageFile && !sample.imageDirectUrl) {
                         setError(`Sample "${sample.name || `#${i + 1}`}": A new image is required after clearing`)
                         setIsSubmitting(false)
                         return
                     }
                 } else {
-                    if (!sample.imageFile) {
-                        setError(`Sample "${sample.name || `#${i + 1}`}": Image is required`)
+                    if (!sample.imageFile && !sample.imageDirectUrl) {
+                        setError(`Sample "${sample.name || `#${i + 1}`}": Image is required (upload a file or paste a URL)`)
                         setIsSubmitting(false)
                         return
                     }
                 }
 
-                if (sample.imageFile) {
+                // Only queue files for upload — direct URLs skip upload
+                if (sample.imageFile && !sample.imageDirectUrl) {
                     filesToUpload.push(sample.imageFile)
                     fileMapping.push({ sampleIndex: i, type: 'image', isExisting: sample.isExisting })
                 }
-                if (sample.audioFile) {
+                if (sample.audioFile && !sample.audioDirectUrl) {
                     filesToUpload.push(sample.audioFile)
                     fileMapping.push({ sampleIndex: i, type: 'audio', isExisting: sample.isExisting })
                 }
-                if (sample.videoFile) {
+                if (sample.videoFile && !sample.videoDirectUrl) {
                     filesToUpload.push(sample.videoFile)
                     fileMapping.push({ sampleIndex: i, type: 'video', isExisting: sample.isExisting })
                 }
             }
 
-            // Pre-upload all files with progress
+            // Pre-upload files with progress
             const uploadedUrls: Map<number, string> = new Map()
             if (filesToUpload.length > 0) {
                 const results = await upload.uploadFiles(filesToUpload)
@@ -286,7 +306,6 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                     throw new Error('Some files failed to upload')
                 }
 
-                // Map results back by index
                 const urlValues = Array.from(results.values())
                 for (let i = 0; i < urlValues.length; i++) {
                     uploadedUrls.set(i, urlValues[i])
@@ -296,14 +315,13 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             // Build form data
             const formData = new FormData()
 
-            // Append showcase fields
             Object.entries(data).forEach(([key, value]) => {
                 if (value !== undefined && value !== null) {
                     formData.append(key, value.toString())
                 }
             })
 
-            // Build sample data with uploaded URLs
+            // Build sample data with uploaded URLs or direct URLs
             const existingSamples: any[] = []
             const newSamples: any[] = []
             let existingSampleIndex = 0
@@ -311,6 +329,22 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
 
             for (let i = 0; i < samples.length; i++) {
                 const sample = samples[i]
+
+                // Helper: resolve URL for a field — direct URL takes priority, then uploaded URL
+                const resolveUrl = (type: 'image' | 'audio' | 'video'): string | null => {
+                    const directUrl = type === 'image' ? sample.imageDirectUrl
+                        : type === 'audio' ? sample.audioDirectUrl
+                        : sample.videoDirectUrl
+                    if (directUrl) return directUrl
+
+                    for (let fi = 0; fi < fileMapping.length; fi++) {
+                        const mapping = fileMapping[fi]
+                        if (mapping.sampleIndex === i && mapping.type === type && mapping.isExisting === sample.isExisting) {
+                            return uploadedUrls.get(fi) || null
+                        }
+                    }
+                    return null
+                }
 
                 if (sample.isExisting && sample.id) {
                     existingSamples.push({
@@ -324,22 +358,15 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         remove_video: sample.videoDeleted,
                     })
 
-                    // Set pre-uploaded URLs for this existing sample
-                    for (let fi = 0; fi < fileMapping.length; fi++) {
-                        const mapping = fileMapping[fi]
-                        if (mapping.sampleIndex === i && mapping.isExisting) {
-                            const url = uploadedUrls.get(fi)
-                            if (url) {
-                                if (mapping.type === 'image') {
-                                    formData.append(`existing_sample_image_url_${existingSampleIndex}`, url)
-                                } else if (mapping.type === 'audio') {
-                                    formData.append(`existing_sample_audio_url_${existingSampleIndex}`, url)
-                                } else if (mapping.type === 'video') {
-                                    formData.append(`existing_sample_video_url_${existingSampleIndex}`, url)
-                                }
-                            }
-                        }
-                    }
+                    const imageUrl = resolveUrl('image')
+                    if (imageUrl) formData.append(`existing_sample_image_url_${existingSampleIndex}`, imageUrl)
+
+                    const audioUrl = resolveUrl('audio')
+                    if (audioUrl) formData.append(`existing_sample_audio_url_${existingSampleIndex}`, audioUrl)
+
+                    const videoUrl = resolveUrl('video')
+                    if (videoUrl) formData.append(`existing_sample_video_url_${existingSampleIndex}`, videoUrl)
+
                     existingSampleIndex++
                 } else {
                     newSamples.push({
@@ -350,22 +377,15 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         orderNo: sample.orderNo,
                     })
 
-                    // Set pre-uploaded URLs for this new sample
-                    for (let fi = 0; fi < fileMapping.length; fi++) {
-                        const mapping = fileMapping[fi]
-                        if (mapping.sampleIndex === i && !mapping.isExisting) {
-                            const url = uploadedUrls.get(fi)
-                            if (url) {
-                                if (mapping.type === 'image') {
-                                    formData.append(`sample_image_url_${newSampleIndex}`, url)
-                                } else if (mapping.type === 'audio') {
-                                    formData.append(`sample_audio_url_${newSampleIndex}`, url)
-                                } else if (mapping.type === 'video') {
-                                    formData.append(`sample_video_url_${newSampleIndex}`, url)
-                                }
-                            }
-                        }
-                    }
+                    const imageUrl = resolveUrl('image')
+                    if (imageUrl) formData.append(`sample_image_url_${newSampleIndex}`, imageUrl)
+
+                    const audioUrl = resolveUrl('audio')
+                    if (audioUrl) formData.append(`sample_audio_url_${newSampleIndex}`, audioUrl)
+
+                    const videoUrl = resolveUrl('video')
+                    if (videoUrl) formData.append(`sample_video_url_${newSampleIndex}`, videoUrl)
+
                     newSampleIndex++
                 }
             }
@@ -376,7 +396,6 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 formData.append('existing_samples', JSON.stringify(existingSamples))
             }
 
-            // Append metrics
             formData.append('metrics', JSON.stringify(metrics.map(m => ({
                 ...m,
                 value: parseFloat(m.value) || 0,
@@ -554,95 +573,116 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                            <div className="space-y-2">
-                                <Label>{sample.isExisting ? 'Replace Image' : 'Image *'}</Label>
-                                <Input
-                                    id={`sample-image-${index}`}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleSampleImage(index, e)}
-                                    disabled={isSubmitting}
-                                />
-                                {sample.imagePreview && (
-                                    <div className="relative inline-block mt-1">
-                                        <img src={sample.imagePreview} alt="Preview" className="max-h-20 rounded" />
-                                        <button
-                                            type="button"
-                                            onClick={() => handleClearSampleImage(index)}
-                                            disabled={isSubmitting}
-                                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none"
-                                            title="Clear image (new image required)"
-                                        >
-                                            &times;
-                                        </button>
-                                    </div>
-                                )}
-                                {sample.imageClearRequested && !sample.imagePreview && (
-                                    <p className="text-xs text-amber-600">Image cleared — please upload a new image</p>
-                                )}
-                            </div>
+                            <FileOrUrlInput
+                                id={`sample-image-${index}`}
+                                label={sample.isExisting ? 'Replace Image' : 'Image *'}
+                                accept="image/*"
+                                disabled={isSubmitting}
+                                directUrl={sample.imageDirectUrl}
+                                onFileChange={(file) => handleSampleImageFile(index, file)}
+                                onUrlChange={(url) => {
+                                    const updated = [...samples]
+                                    updated[index].imageDirectUrl = url
+                                    updated[index].imageFile = null
+                                    updated[index].imageClearRequested = false
+                                    setSamples(updated)
+                                }}
+                                preview={<>
+                                    {sample.imagePreview && !sample.imageDirectUrl && (
+                                        <div className="relative inline-block mt-1">
+                                            <img src={sample.imagePreview} alt="Preview" className="max-h-20 rounded" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleClearSampleImage(index)}
+                                                disabled={isSubmitting}
+                                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none"
+                                                title="Clear image (new image required)"
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    )}
+                                    {sample.imageClearRequested && !sample.imagePreview && !sample.imageDirectUrl && (
+                                        <p className="text-xs text-amber-600">Image cleared — upload a new image or paste a URL</p>
+                                    )}
+                                </>}
+                            />
                         </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                            <div className="space-y-2">
-                                <Label>{sample.isExisting && sample.audioPreview ? 'Replace Audio' : 'Audio File'}</Label>
-                                <Input
-                                    id={`sample-audio-${index}`}
-                                    type="file"
-                                    accept="audio/*"
-                                    onChange={(e) => handleSampleAudio(index, e)}
-                                    disabled={isSubmitting}
-                                />
-                                {sample.audioPreview && !sample.audioFile && (
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-xs text-gray-500 truncate flex-1">Current: {sample.audioPreview}</p>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDeleteSampleAudio(index)}
-                                            disabled={isSubmitting}
-                                            className="text-xs text-red-500 hover:text-red-700 whitespace-nowrap"
-                                            title="Delete audio"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                )}
-                                {sample.audioDeleted && (
-                                    <p className="text-xs text-red-500">Audio will be deleted on save</p>
-                                )}
-                                {sample.audioFile && (
-                                    <p className="text-xs text-green-600 truncate">New: {sample.audioFile.name}</p>
-                                )}
-                            </div>
-                            <div className="space-y-2">
-                                <Label>{sample.isExisting && sample.videoPreview ? 'Replace Video' : 'Video File'}</Label>
-                                <Input
-                                    id={`sample-video-${index}`}
-                                    type="file"
-                                    accept="video/*"
-                                    onChange={(e) => handleSampleVideo(index, e)}
-                                    disabled={isSubmitting}
-                                />
-                                {sample.videoPreview && !sample.videoFile && (
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-xs text-gray-500 truncate flex-1">Current: {sample.videoPreview}</p>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDeleteSampleVideo(index)}
-                                            disabled={isSubmitting}
-                                            className="text-xs text-red-500 hover:text-red-700 whitespace-nowrap"
-                                            title="Delete video"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                )}
-                                {sample.videoDeleted && (
-                                    <p className="text-xs text-red-500">Video will be deleted on save</p>
-                                )}
-                                {sample.videoFile && (
-                                    <p className="text-xs text-green-600 truncate">New: {sample.videoFile.name}</p>
-                                )}
-                            </div>
+                            <FileOrUrlInput
+                                id={`sample-audio-${index}`}
+                                label={sample.isExisting && sample.audioPreview ? 'Replace Audio' : 'Audio File'}
+                                accept="audio/*"
+                                disabled={isSubmitting}
+                                directUrl={sample.audioDirectUrl}
+                                onFileChange={(file) => handleSampleAudioFile(index, file)}
+                                onUrlChange={(url) => {
+                                    const updated = [...samples]
+                                    updated[index].audioDirectUrl = url
+                                    updated[index].audioFile = null
+                                    updated[index].audioDeleted = false
+                                    setSamples(updated)
+                                }}
+                                preview={<>
+                                    {sample.audioPreview && !sample.audioFile && !sample.audioDirectUrl && (
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs text-gray-500 truncate flex-1">Current: {sample.audioPreview}</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteSampleAudio(index)}
+                                                disabled={isSubmitting}
+                                                className="text-xs text-red-500 hover:text-red-700 whitespace-nowrap"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    )}
+                                    {sample.audioDeleted && (
+                                        <p className="text-xs text-red-500">Audio will be deleted on save</p>
+                                    )}
+                                    {sample.audioFile && (
+                                        <p className="text-xs text-green-600 truncate">New: {sample.audioFile.name}</p>
+                                    )}
+                                </>}
+                            />
+
+                            <FileOrUrlInput
+                                id={`sample-video-${index}`}
+                                label={sample.isExisting && sample.videoPreview ? 'Replace Video' : 'Video File'}
+                                accept="video/*"
+                                disabled={isSubmitting}
+                                directUrl={sample.videoDirectUrl}
+                                onFileChange={(file) => handleSampleVideoFile(index, file)}
+                                onUrlChange={(url) => {
+                                    const updated = [...samples]
+                                    updated[index].videoDirectUrl = url
+                                    updated[index].videoFile = null
+                                    updated[index].videoDeleted = false
+                                    setSamples(updated)
+                                }}
+                                preview={<>
+                                    {sample.videoPreview && !sample.videoFile && !sample.videoDirectUrl && (
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs text-gray-500 truncate flex-1">Current: {sample.videoPreview}</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteSampleVideo(index)}
+                                                disabled={isSubmitting}
+                                                className="text-xs text-red-500 hover:text-red-700 whitespace-nowrap"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    )}
+                                    {sample.videoDeleted && (
+                                        <p className="text-xs text-red-500">Video will be deleted on save</p>
+                                    )}
+                                    {sample.videoFile && (
+                                        <p className="text-xs text-green-600 truncate">New: {sample.videoFile.name}</p>
+                                    )}
+                                </>}
+                            />
                         </div>
 
                         {sample.isExisting && (

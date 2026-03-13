@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { FileOrUrlInput } from '@/components/ui/file-or-url-input'
 import { UploadProgressList } from '@/components/ui/upload-progress'
 import { useFileUpload } from '@/lib/hooks/use-file-upload'
 import { toast } from 'sonner'
@@ -31,12 +32,13 @@ export function BannerForm({ initialData }: BannerFormProps) {
     const [error, setError] = useState('')
     const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image ?? null)
     const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imageDirectUrl, setImageDirectUrl] = useState('')
     const upload = useFileUpload()
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
+    const handleImageFile = (file: File | null) => {
+        setImageFile(file)
+        setImageDirectUrl('')
         if (file) {
-            setImageFile(file)
             const reader = new FileReader()
             reader.onloadend = () => setImagePreview(reader.result as string)
             reader.readAsDataURL(file)
@@ -53,8 +55,10 @@ export function BannerForm({ initialData }: BannerFormProps) {
             const formData = new FormData(form)
             formData.delete('image')
 
-            // Pre-upload image file with progress
-            if (imageFile) {
+            // Direct URL takes priority — skip upload entirely
+            if (imageDirectUrl) {
+                formData.set('image_url', imageDirectUrl)
+            } else if (imageFile) {
                 const results = await upload.uploadFiles([imageFile])
                 const urls = Array.from(results.values())
                 if (urls.length === 0) {
@@ -116,20 +120,21 @@ export function BannerForm({ initialData }: BannerFormProps) {
             </div>
 
             {/* Banner Image */}
-            <div className="space-y-2">
-                <Label htmlFor="image">Banner Image</Label>
-                <Input
-                    id="image"
-                    name="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    disabled={isSubmitting}
-                />
-                {imagePreview && (
+            <FileOrUrlInput
+                id="image"
+                label="Banner Image"
+                accept="image/*"
+                disabled={isSubmitting}
+                directUrl={imageDirectUrl}
+                onFileChange={handleImageFile}
+                onUrlChange={(url) => {
+                    setImageDirectUrl(url)
+                    setImageFile(null)
+                }}
+                preview={imagePreview && !imageDirectUrl ? (
                     <img src={imagePreview} alt="Preview" className="mt-2 max-h-48 rounded object-cover" />
-                )}
-            </div>
+                ) : undefined}
+            />
 
             {/* Title */}
             <div className="space-y-2">

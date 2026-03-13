@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { FileOrUrlInput } from '@/components/ui/file-or-url-input'
 import { UploadProgressList } from '@/components/ui/upload-progress'
 import { useFileUpload } from '@/lib/hooks/use-file-upload'
 import { toast } from 'sonner'
@@ -31,6 +32,7 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null)
     const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imageDirectUrl, setImageDirectUrl] = useState('')
     const [galleryPreviews, setGalleryPreviews] = useState<string[]>(initialData?.gallery_images || [])
     const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([])
     const isEdit = !!initialData
@@ -106,11 +108,16 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
                 }
             })
 
-            // Collect all files to upload
-            const filesToUpload: File[] = []
-            const fileLabels: string[] = [] // track which file is what
+            // Direct URL takes priority — skip upload entirely
+            if (imageDirectUrl) {
+                formData.set('image_url', imageDirectUrl)
+            }
 
-            if (imageFile) {
+            // Collect files to upload (skip if direct URL provided)
+            const filesToUpload: File[] = []
+            const fileLabels: string[] = []
+
+            if (imageFile && !imageDirectUrl) {
                 filesToUpload.push(imageFile)
                 fileLabels.push('featured')
             }
@@ -177,10 +184,10 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
         }
     }
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
+    const handleImageFile = (file: File | null) => {
+        setImageFile(file)
+        setImageDirectUrl('')
         if (file) {
-            setImageFile(file)
             const reader = new FileReader()
             reader.onloadend = () => {
                 setImagePreview(reader.result as string)
@@ -238,19 +245,21 @@ export function ArticleForm({ initialData, categories }: ArticleFormProps) {
             )}
 
             {/* Featured Image */}
-            <div className="space-y-2">
-                <Label htmlFor="image">Featured Image</Label>
-                <Input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    disabled={isSubmitting}
-                />
-                {imagePreview && (
+            <FileOrUrlInput
+                id="image"
+                label="Featured Image"
+                accept="image/*"
+                disabled={isSubmitting}
+                directUrl={imageDirectUrl}
+                onFileChange={handleImageFile}
+                onUrlChange={(url) => {
+                    setImageDirectUrl(url)
+                    setImageFile(null)
+                }}
+                preview={imagePreview && !imageDirectUrl ? (
                     <img src={imagePreview} alt="Preview" className="mt-2 max-h-48 rounded" />
-                )}
-            </div>
+                ) : undefined}
+            />
 
             {/* Gallery Images */}
             <div className="space-y-2">
