@@ -19,7 +19,7 @@ function getOssClient() {
     accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET!,
     bucket: process.env.OSS_BUCKET!,
     secure: true, // Use HTTPS to avoid socket hang ups
-    timeout: 300_000, // 5 minutes
+    timeout: 600_000, // 10 minutes
   })
   return ossClient
 }
@@ -43,10 +43,10 @@ export async function uploadFile(file: File, filename?: string): Promise<string>
   const oss = getOssClient()
   if (oss) {
     const objectKey = `uploads/${Date.now()}-${name}`
-    // Use multipart upload only for very large files (> 200MB).
-    // For files under 200MB, a single oss.put() is faster and more reliable
-    // (avoids initiate/complete overhead and is less prone to timeouts).
-    if (buffer.length > 200 * 1024 * 1024) {
+    // Use multipart upload for files > 10MB.
+    // Single oss.put() can timeout on larger files since it's one HTTP request.
+    // Multipart splits into smaller parts that each complete within timeout.
+    if (buffer.length > 10 * 1024 * 1024) {
       const tmpFile = path.join(os.tmpdir(), `upload-${Date.now()}-${name}`)
       try {
         await fs.writeFile(tmpFile, buffer)
