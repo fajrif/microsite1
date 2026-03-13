@@ -399,28 +399,23 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                             {/* Campaign Details */}
                             {(showcase.campaign_dates || showcase.market || showcase.formats || showcase.source) && (
-                                <div className="mt-10 pt-6 font-spotify font-bold">
+                                <div className="mt-10 pt-6 font-spotify">
                                     <p className="text-base text-white leading-relaxed">
                                         {[
                                             showcase.campaign_dates ? `Campaign Dates: ${showcase.campaign_dates}` : null,
                                             showcase.formats ? `Formats: ${showcase.formats}` : null,
                                             showcase.market ? `Market: ${showcase.market}` : null,
+                                            showcase.source ? `Source: ${showcase.source}` : null,
                                         ]
                                             .filter(Boolean)
                                             .map((item, i, arr) => (
-                                                <span key={i}>
-                                                    <strong className="font-bold">{item!.split(': ')[0]}: </strong>
-                                                    {item!.split(': ').slice(1).join(': ')}
+                                                <span className="font-medium" key={i}>
+                                                    {item}
                                                     {i < arr.length - 1 && <span className="mx-2 text-white">|</span>}
                                                 </span>
                                             ))
                                         }
                                     </p>
-                                    {showcase.source && (
-                                        <p className="text-base text-white mt-1">
-                                            <strong className="font-bold">Source: </strong>{showcase.source}
-                                        </p>
-                                    )}
                                 </div>
                             )}
                         </div>
