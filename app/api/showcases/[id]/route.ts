@@ -124,13 +124,14 @@ export async function PUT(
 
         // Parse existing samples to update
         const existingSamplesJson = formData.get('existing_samples') as string | null
-        const existingSamplesData: { id: string; name: string; description: string; audio: string; video_link: string; orderNo?: number; remove_audio?: boolean; remove_video?: boolean }[] = existingSamplesJson ? JSON.parse(existingSamplesJson) : []
+        const existingSamplesData: { id: string; name: string; description: string; audio: string; video_link: string; orderNo?: number; remove_audio?: boolean; remove_video?: boolean; remove_desktop_image?: boolean }[] = existingSamplesJson ? JSON.parse(existingSamplesJson) : []
         const keepSampleIds = existingSamplesData.map((s) => s.id)
 
         // Delete removed samples and their files
         for (const sample of current.samples) {
             if (!keepSampleIds.includes(sample.id)) {
                 await deleteBlobIfExists(sample.image)
+                await deleteBlobIfExists(sample.desktop_image)
                 await deleteBlobIfExists(sample.audio)
                 await deleteBlobIfExists(sample.video_link)
                 await prisma.sample.delete({ where: { id: sample.id } })
@@ -159,6 +160,24 @@ export async function PUT(
                 if (newImage && newImage.size > 0) {
                     if (oldSample) await deleteBlobIfExists(oldSample.image)
                     updateData.image = await uploadFile(newImage)
+                }
+            }
+
+            // Handle desktop image
+            if (s.remove_desktop_image) {
+                if (oldSample?.desktop_image) await deleteBlobIfExists(oldSample.desktop_image)
+                updateData.desktop_image = null
+            } else {
+                const existingDesktopImageUrl = formData.get(`existing_sample_desktop_image_url_${i}`) as string | null
+                if (existingDesktopImageUrl) {
+                    if (oldSample?.desktop_image) await deleteBlobIfExists(oldSample.desktop_image)
+                    updateData.desktop_image = existingDesktopImageUrl
+                } else {
+                    const newDesktopImage = formData.get(`existing_sample_desktop_image_${i}`) as File | null
+                    if (newDesktopImage && newDesktopImage.size > 0) {
+                        if (oldSample?.desktop_image) await deleteBlobIfExists(oldSample.desktop_image)
+                        updateData.desktop_image = await uploadFile(newDesktopImage)
+                    }
                 }
             }
 
@@ -225,6 +244,18 @@ export async function PUT(
                 imageUrl = await uploadFile(sampleImage)
             }
 
+            // Handle desktop image: pre-uploaded URL or file upload
+            const sampleDesktopImageUrl = formData.get(`sample_desktop_image_url_${i}`) as string | null
+            let desktopImageUrl: string | null = null
+            if (sampleDesktopImageUrl) {
+                desktopImageUrl = sampleDesktopImageUrl
+            } else {
+                const sampleDesktopImage = formData.get(`sample_desktop_image_${i}`) as File | null
+                if (sampleDesktopImage && sampleDesktopImage.size > 0) {
+                    desktopImageUrl = await uploadFile(sampleDesktopImage)
+                }
+            }
+
             // Handle audio: pre-uploaded URL or file upload
             const sampleAudioUrl = formData.get(`sample_audio_url_${i}`) as string | null
             let audioUrl = samplesData[i].audio || null
@@ -254,6 +285,7 @@ export async function PUT(
                     name: samplesData[i].name,
                     description: samplesData[i].description || null,
                     image: imageUrl,
+                    desktop_image: desktopImageUrl,
                     audio: audioUrl,
                     video_link: videoUrl,
                     orderNo: samplesData[i].orderNo ?? 0,
@@ -327,6 +359,7 @@ export async function DELETE(
         if (showcase) {
             for (const sample of showcase.samples) {
                 await deleteBlobIfExists(sample.image)
+                await deleteBlobIfExists(sample.desktop_image)
                 await deleteBlobIfExists(sample.audio)
                 await deleteBlobIfExists(sample.video_link)
             }

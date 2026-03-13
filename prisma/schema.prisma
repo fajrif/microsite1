@@ -145,16 +145,17 @@ model Showcase {
 }
 
 model Sample {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String
-  description String?
-  showcase_id String   @db.Uuid
-  image       String
-  audio       String?
-  video_link  String?
-  orderNo     Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  description   String?
+  showcase_id   String   @db.Uuid
+  image         String
+  desktop_image String?
+  audio         String?
+  video_link    String?
+  orderNo       Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   showcase Showcase @relation(fields: [showcase_id], references: [id], onDelete: Cascade)
 

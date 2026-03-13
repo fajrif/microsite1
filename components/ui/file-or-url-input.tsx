@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Link, Upload } from 'lucide-react'
@@ -29,6 +29,11 @@ export function FileOrUrlInput({
     preview,
 }: FileOrUrlInputProps) {
     const [mode, setMode] = useState<'file' | 'url'>(directUrl ? 'url' : 'file')
+
+    // Sync mode when directUrl prop changes externally (e.g. component reused across sample indices)
+    useEffect(() => {
+        if (directUrl) setMode('url')
+    }, [directUrl])
 
     return (
         <div className="space-y-2">
@@ -71,7 +76,7 @@ export function FileOrUrlInput({
                     id={`${id}-url`}
                     type="text"
                     placeholder="https://... paste file URL"
-                    value={directUrl}
+                    value={directUrl ?? ''}
                     onChange={(e) => onUrlChange(e.target.value)}
                     disabled={disabled}
                 />

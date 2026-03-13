@@ -24,6 +24,10 @@ interface SampleEntry {
     imagePreview: string | null
     imageDirectUrl: string
     imageClearRequested: boolean
+    desktopImageFile: File | null
+    desktopImagePreview: string | null
+    desktopImageDirectUrl: string
+    desktopImageDeleted: boolean
     audioFile: File | null
     audioPreview: string | null
     audioDirectUrl: string
@@ -92,6 +96,10 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 imagePreview: s.image,
                 imageDirectUrl: '',
                 imageClearRequested: false,
+                desktopImageFile: null,
+                desktopImagePreview: s.desktop_image || null,
+                desktopImageDirectUrl: '',
+                desktopImageDeleted: false,
                 audioFile: null,
                 audioPreview: s.audio || null,
                 audioDirectUrl: '',
@@ -132,6 +140,10 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
             imagePreview: null,
             imageDirectUrl: '',
             imageClearRequested: false,
+            desktopImageFile: null,
+            desktopImagePreview: null,
+            desktopImageDirectUrl: '',
+            desktopImageDeleted: false,
             audioFile: null,
             audioPreview: null,
             audioDirectUrl: '',
@@ -181,6 +193,35 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
         updated[index].imageClearRequested = true
         setSamples(updated)
         const input = document.getElementById(`sample-image-${index}`) as HTMLInputElement
+        if (input) input.value = ''
+    }
+
+    const handleSampleDesktopImageFile = (index: number, file: File | null) => {
+        const updated = [...samples]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                updated[index].desktopImageFile = file
+                updated[index].desktopImagePreview = reader.result as string
+                updated[index].desktopImageDirectUrl = ''
+                updated[index].desktopImageDeleted = false
+                setSamples([...updated])
+            }
+            reader.readAsDataURL(file)
+        } else {
+            updated[index].desktopImageFile = null
+            setSamples(updated)
+        }
+    }
+
+    const handleDeleteSampleDesktopImage = (index: number) => {
+        const updated = [...samples]
+        updated[index].desktopImageFile = null
+        updated[index].desktopImagePreview = null
+        updated[index].desktopImageDirectUrl = ''
+        updated[index].desktopImageDeleted = true
+        setSamples(updated)
+        const input = document.getElementById(`sample-desktop-image-${index}`) as HTMLInputElement
         if (input) input.value = ''
     }
 
@@ -262,7 +303,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
         try {
             // Collect only files that need uploading (skip samples with direct URLs)
             const filesToUpload: File[] = []
-            const fileMapping: { sampleIndex: number; type: 'image' | 'audio' | 'video'; isExisting: boolean }[] = []
+            const fileMapping: { sampleIndex: number; type: 'image' | 'desktop_image' | 'audio' | 'video'; isExisting: boolean }[] = []
 
             for (let i = 0; i < samples.length; i++) {
                 const sample = samples[i]
@@ -285,6 +326,10 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 if (sample.imageFile && !sample.imageDirectUrl) {
                     filesToUpload.push(sample.imageFile)
                     fileMapping.push({ sampleIndex: i, type: 'image', isExisting: sample.isExisting })
+                }
+                if (sample.desktopImageFile && !sample.desktopImageDirectUrl) {
+                    filesToUpload.push(sample.desktopImageFile)
+                    fileMapping.push({ sampleIndex: i, type: 'desktop_image', isExisting: sample.isExisting })
                 }
                 if (sample.audioFile && !sample.audioDirectUrl) {
                     filesToUpload.push(sample.audioFile)
@@ -331,8 +376,9 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 const sample = samples[i]
 
                 // Helper: resolve URL for a field — direct URL takes priority, then uploaded URL
-                const resolveUrl = (type: 'image' | 'audio' | 'video'): string | null => {
+                const resolveUrl = (type: 'image' | 'desktop_image' | 'audio' | 'video'): string | null => {
                     const directUrl = type === 'image' ? sample.imageDirectUrl
+                        : type === 'desktop_image' ? sample.desktopImageDirectUrl
                         : type === 'audio' ? sample.audioDirectUrl
                         : sample.videoDirectUrl
                     if (directUrl) return directUrl
@@ -356,10 +402,14 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                         orderNo: sample.orderNo,
                         remove_audio: sample.audioDeleted,
                         remove_video: sample.videoDeleted,
+                        remove_desktop_image: sample.desktopImageDeleted,
                     })
 
                     const imageUrl = resolveUrl('image')
                     if (imageUrl) formData.append(`existing_sample_image_url_${existingSampleIndex}`, imageUrl)
+
+                    const desktopImageUrl = resolveUrl('desktop_image')
+                    if (desktopImageUrl) formData.append(`existing_sample_desktop_image_url_${existingSampleIndex}`, desktopImageUrl)
 
                     const audioUrl = resolveUrl('audio')
                     if (audioUrl) formData.append(`existing_sample_audio_url_${existingSampleIndex}`, audioUrl)
@@ -379,6 +429,9 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
 
                     const imageUrl = resolveUrl('image')
                     if (imageUrl) formData.append(`sample_image_url_${newSampleIndex}`, imageUrl)
+
+                    const desktopImageUrl = resolveUrl('desktop_image')
+                    if (desktopImageUrl) formData.append(`sample_desktop_image_url_${newSampleIndex}`, desktopImageUrl)
 
                     const audioUrl = resolveUrl('audio')
                     if (audioUrl) formData.append(`sample_audio_url_${newSampleIndex}`, audioUrl)
@@ -604,6 +657,42 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                                     )}
                                     {sample.imageClearRequested && !sample.imagePreview && !sample.imageDirectUrl && (
                                         <p className="text-xs text-amber-600">Image cleared — upload a new image or paste a URL</p>
+                                    )}
+                                </>}
+                            />
+                            <FileOrUrlInput
+                                id={`sample-desktop-image-${index}`}
+                                label="Desktop Image (optional)"
+                                accept="image/*"
+                                disabled={isSubmitting}
+                                directUrl={sample.desktopImageDirectUrl}
+                                onFileChange={(file) => handleSampleDesktopImageFile(index, file)}
+                                onUrlChange={(url) => {
+                                    const updated = [...samples]
+                                    updated[index].desktopImageDirectUrl = url
+                                    updated[index].desktopImageFile = null
+                                    updated[index].desktopImageDeleted = false
+                                    setSamples(updated)
+                                }}
+                                preview={<>
+                                    {sample.desktopImagePreview && !sample.desktopImageFile && !sample.desktopImageDirectUrl && (
+                                        <div className="flex items-center gap-2">
+                                            <img src={sample.desktopImagePreview} alt="Desktop preview" className="max-h-20 rounded" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteSampleDesktopImage(index)}
+                                                disabled={isSubmitting}
+                                                className="text-xs text-red-500 hover:text-red-700 whitespace-nowrap"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    )}
+                                    {sample.desktopImageDeleted && (
+                                        <p className="text-xs text-red-500">Desktop image will be deleted on save</p>
+                                    )}
+                                    {sample.desktopImageFile && (
+                                        <img src={sample.desktopImagePreview!} alt="Desktop preview" className="max-h-20 rounded mt-1" />
                                     )}
                                 </>}
                             />

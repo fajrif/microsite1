@@ -14,6 +14,7 @@ interface Sample {
     name: string
     description: string | null
     image: string
+    desktop_image: string | null
     audio: string | null
     video_link: string | null
 }
@@ -71,6 +72,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
     const hasVideo = !!activeSample?.video_link
     const hasAudio = !hasVideo && !!activeSample?.audio
     const hasMedia = hasVideo || hasAudio
+    const hasDesktop = !!activeSample?.desktop_image
 
     useEffect(() => {
         setIsPlaying(false)
@@ -135,6 +137,81 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
         return `${prefix}${num}${suffix}`
     }
 
+    /* Called as a function, not a component — avoids unmount/remount on every render */
+    const renderPlayOverlay = () => (
+        <button
+            onClick={togglePlay}
+            className="absolute inset-0 flex items-center justify-center z-10 group"
+        >
+            <div className={cn(
+                'w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center transition-all duration-300',
+                isBuffering && isPlaying
+                    ? 'opacity-100'
+                    : isPlaying
+                        ? 'opacity-0 group-hover:opacity-100'
+                        : 'opacity-100'
+            )}>
+                {isBuffering && isPlaying ? (
+                    <Loader2 className="h-6 w-6 text-white animate-spin" />
+                ) : isPlaying ? (
+                    <Pause className="h-6 w-6 text-white" />
+                ) : (
+                    <Play className="h-6 w-6 text-white ml-0.5" />
+                )}
+            </div>
+        </button>
+    )
+
+    const renderPhonePlayerContent = () => (
+        hasVideo ? (
+            <div className="relative w-full h-full">
+                <video
+                    ref={videoRef}
+                    src={activeSample.video_link!}
+                    onTimeUpdate={handleTimeUpdate}
+                    onEnded={handleEnded}
+                    onWaiting={handleWaiting}
+                    onPlaying={handleCanPlay}
+                    onCanPlay={handleCanPlay}
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+                {!isPlaying && (
+                    <Image
+                        src={activeSample.image}
+                        alt={activeSample.name}
+                        fill
+                        className="absolute inset-0 object-cover z-[5]"
+                        unoptimized
+                    />
+                )}
+                {renderPlayOverlay()}
+            </div>
+        ) : (
+            <div className="relative w-full h-full">
+                <Image
+                    src={activeSample.image}
+                    alt={activeSample.name}
+                    fill
+                    className="absolute inset-0 object-cover z-[5]"
+                    unoptimized
+                />
+                {hasAudio && (
+                    <audio
+                        ref={audioRef}
+                        src={activeSample.audio!}
+                        onTimeUpdate={handleTimeUpdate}
+                        onEnded={handleEnded}
+                        onWaiting={handleWaiting}
+                        onPlaying={handleCanPlay}
+                        onCanPlay={handleCanPlay}
+                    />
+                )}
+                {renderPlayOverlay()}
+            </div>
+        )
+    )
+
     return (
         <>
             <div className="absolute top-0 z-[0] h-screen w-screen pointer-events-none bg-[radial-gradient(ellipse_20%_80%_at_50%_-20%,rgba(16,48,39,0.8),rgba(255,255,255,0))]" />
@@ -168,9 +245,12 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                             {/* Content Grid */}
                             <div className="mt-10 md:mt-16">
                                 <AnimatedDiv id="showcases-video-player" delay={0.1}>
-                                    {/* Samples + iPhone Player */}
-                                    <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-8 md:pl-[100px]">
-                                        {/* Left: Samples */}
+                                    {/* Samples + Player */}
+                                    <div className={cn(
+                                        'flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-8 overflow-x-auto pb-2',
+                                        !hasDesktop && 'md:pl-[100px]'
+                                    )}>
+                                        {/* Left: Samples list */}
                                         {showcase.samples.length > 0 && (
                                             <div className="flex flex-col space-y-2 w-44 shrink-0">
                                                 {showcase.samples.map((sample, index) => (
@@ -197,104 +277,60 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                                         {/* Right: Player */}
                                         {activeSample && (
-                                            <div className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col" style={{ borderColor: 'hsl(var(--ptr-primary))' }}>
-                                                {hasVideo ? (
-                                                    /* VIDEO: full-height with centered play overlay */
-                                                    <div className="relative w-full h-full">
-                                                        <video
-                                                            ref={videoRef}
-                                                            src={activeSample.video_link!}
-                                                            onTimeUpdate={handleTimeUpdate}
-                                                            onEnded={handleEnded}
-                                                            onWaiting={handleWaiting}
-                                                            onPlaying={handleCanPlay}
-                                                            onCanPlay={handleCanPlay}
-                                                            playsInline
-                                                            className="absolute inset-0 w-full h-full object-cover"
-                                                        />
-                                                        {/* Poster image overlay — visible when not playing */}
-                                                        {!isPlaying && (
-                                                            <Image
-                                                                src={activeSample.image}
-                                                                alt={activeSample.name}
-                                                                fill
-                                                                className="absolute inset-0 object-cover z-[5]"
-                                                                unoptimized
-                                                            />
-                                                        )}
-                                                        {/* Centered play/pause overlay */}
-                                                        <button
-                                                            onClick={togglePlay}
-                                                            className="absolute inset-0 flex items-center justify-center z-10 group"
-                                                        >
-                                                            <div className={cn(
-                                                                'w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center transition-all duration-300',
-                                                                isBuffering && isPlaying
-                                                                    ? 'opacity-100'
-                                                                    : isPlaying
-                                                                        ? 'opacity-0 group-hover:opacity-100'
-                                                                        : 'opacity-100'
-                                                            )}>
-                                                                {isBuffering && isPlaying ? (
-                                                                    <Loader2 className="h-6 w-6 text-white animate-spin" />
-                                                                ) : isPlaying ? (
-                                                                    <Pause className="h-6 w-6 text-white" />
-                                                                ) : (
-                                                                    <Play className="h-6 w-6 text-white ml-0.5" />
-                                                                )}
-                                                            </div>
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    /* AUDIO: full-height image with centered play overlay — mirrors video layout */
-                                                    <div className="relative w-full h-full">
-                                                        {/* Cover image fills the entire phone container */}
+                                            hasDesktop ? (
+                                                <>
+                                                    {/* MOBILE: phone player centered over full-width desktop image */}
+                                                    <div className="relative w-full h-[380px] rounded-xl overflow-hidden md:hidden">
+                                                        {/* Desktop image — natural width, fixed height covers background */}
                                                         <Image
-                                                            src={activeSample.image}
-                                                            alt={activeSample.name}
-                                                            fill
-                                                            className="absolute inset-0 object-cover z-[5]"
+                                                            src={activeSample.desktop_image!}
+                                                            alt={`${activeSample.name} desktop`}
+                                                            width={1200}
+                                                            height={750}
+                                                            className="w-full object-cover"
                                                             unoptimized
                                                         />
-
-                                                        {/* Hidden audio element */}
-                                                        {hasAudio && (
-                                                            <audio
-                                                                ref={audioRef}
-                                                                src={activeSample.audio!}
-                                                                onTimeUpdate={handleTimeUpdate}
-                                                                onEnded={handleEnded}
-                                                                onWaiting={handleWaiting}
-                                                                onPlaying={handleCanPlay}
-                                                                onCanPlay={handleCanPlay}
-                                                            />
-                                                        )}
-
-                                                        {/* Centered play/pause overlay — identical to video */}
-                                                        <button
-                                                            onClick={togglePlay}
-                                                            className="absolute inset-0 flex items-center justify-center z-10 group"
-                                                        >
-                                                            <div className={cn(
-                                                                'w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center transition-all duration-300',
-                                                                isBuffering && isPlaying
-                                                                    ? 'opacity-100'
-                                                                    : isPlaying
-                                                                        ? 'opacity-0 group-hover:opacity-100'
-                                                                        : 'opacity-100'
-                                                            )}>
-                                                                {isBuffering && isPlaying ? (
-                                                                    <Loader2 className="h-6 w-6 text-white animate-spin" />
-                                                                ) : isPlaying ? (
-                                                                    <Pause className="h-6 w-6 text-white" />
-                                                                ) : (
-                                                                    <Play className="h-6 w-6 text-white ml-0.5" />
-                                                                )}
+                                                        {/* Phone player fully visible, centered on top */}
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <div
+                                                                className="w-[160px] h-[340px] rounded-2xl border-2 overflow-hidden"
+                                                                style={{ borderColor: 'hsl(var(--ptr-primary))' }}
+                                                            >
+                                                                {renderPhonePlayerContent()}
                                                             </div>
-                                                        </button>
+                                                        </div>
                                                     </div>
-                                                )}
-                                            </div>
+
+                                                    {/* DESKTOP: original side-by-side — desktop image + phone overlapping right */}
+                                                    <div className="relative hidden md:flex items-center shrink-0">
+                                                        <div className="relative w-[660px] rounded-xl overflow-hidden shrink-0">
+                                                            <Image
+                                                                src={activeSample.desktop_image!}
+                                                                alt={`${activeSample.name} desktop`}
+                                                                width={660}
+                                                                height={413}
+                                                                className="w-full h-auto object-cover"
+                                                                unoptimized
+                                                            />
+                                                        </div>
+                                                        {/* Phone overlapping the right edge */}
+                                                        <div
+                                                            className="relative z-10 -ml-60 shrink-0 w-[200px] h-[420px] rounded-2xl border-2 bg-black overflow-hidden"
+                                                            style={{ borderColor: 'hsl(var(--ptr-primary))' }}
+                                                        >
+                                                            {renderPhonePlayerContent()}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                /* Phone only */
+                                                <div
+                                                    className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col"
+                                                    style={{ borderColor: 'hsl(var(--ptr-primary))' }}
+                                                >
+                                                    {renderPhonePlayerContent()}
+                                                </div>
+                                            )
                                         )}
                                     </div>
                                 </AnimatedDiv>
@@ -331,7 +367,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                             {/* Metrics Section */}
                             {showcase.metrics.length > 0 && (
-                                <div className="mt-16 pt-10 border-t border-white/10">
+                                <div className="mt-16 pt-10">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
                                         {showcase.metrics.map((metric) => (
                                             <div key={metric.id}>
@@ -363,7 +399,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
 
                             {/* Campaign Details */}
                             {(showcase.campaign_dates || showcase.market || showcase.formats || showcase.source) && (
-                                <div className="mt-10 pt-6 border-t border-white/10 font-spotify font-bold">
+                                <div className="mt-10 pt-6 font-spotify font-bold">
                                     <p className="text-base text-white leading-relaxed">
                                         {[
                                             showcase.campaign_dates ? `Campaign Dates: ${showcase.campaign_dates}` : null,

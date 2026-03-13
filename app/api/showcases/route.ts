@@ -140,6 +140,18 @@ export async function POST(request: Request) {
                 imageUrl = await uploadFile(sampleImage)
             }
 
+            // Handle desktop image: pre-uploaded URL or file upload
+            const sampleDesktopImageUrl = formData.get(`sample_desktop_image_url_${i}`) as string | null
+            let desktopImageUrl: string | null = null
+            if (sampleDesktopImageUrl) {
+                desktopImageUrl = sampleDesktopImageUrl
+            } else {
+                const sampleDesktopImage = formData.get(`sample_desktop_image_${i}`) as File | null
+                if (sampleDesktopImage && sampleDesktopImage.size > 0) {
+                    desktopImageUrl = await uploadFile(sampleDesktopImage)
+                }
+            }
+
             // Handle audio: pre-uploaded URL or file upload
             const sampleAudioUrl = formData.get(`sample_audio_url_${i}`) as string | null
             let audioUrl = samplesData[i].audio || null
@@ -168,6 +180,7 @@ export async function POST(request: Request) {
                 name: samplesData[i].name,
                 description: samplesData[i].description || null,
                 image: imageUrl,
+                desktop_image: desktopImageUrl,
                 audio: audioUrl,
                 video_link: videoUrl,
                 orderNo: samplesData[i].orderNo ?? 0,
