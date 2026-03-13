@@ -4,6 +4,7 @@
 
 import path from 'path'
 import fs from 'fs/promises'
+import os from 'os'
 
 let ossClient: any = null
 
@@ -41,12 +42,18 @@ export async function uploadFile(file: File, filename?: string): Promise<string>
   const oss = getOssClient()
   if (oss) {
     const objectKey = `uploads/${Date.now()}-${name}`
-    // Use multipart upload for files > 50MB
+    // Use multipart upload for files > 50MB (requires a file path, not a buffer)
     if (buffer.length > 50 * 1024 * 1024) {
-      await oss.multipartUpload(objectKey, buffer, {
-        parallel: 4,
-        partSize: 5 * 1024 * 1024, // 5MB parts
-      })
+      const tmpFile = path.join(os.tmpdir(), `upload-${Date.now()}-${name}`)
+      try {
+        await fs.writeFile(tmpFile, buffer)
+        await oss.multipartUpload(objectKey, tmpFile, {
+          parallel: 4,
+          partSize: 5 * 1024 * 1024, // 5MB parts
+        })
+      } finally {
+        await fs.unlink(tmpFile).catch(() => {})
+      }
     } else {
       await oss.put(objectKey, buffer)
     }
