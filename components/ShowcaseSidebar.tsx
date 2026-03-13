@@ -102,7 +102,7 @@ export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
                 className="flex items-center gap-1 text-xs text-white/80 hover:text-white transition-colors tracking-widest mt-4"
             >
                 <ChevronLeft className="h-4 w-4" />
-                Back To Home
+                返回首页
             </Link>
         </nav>
     )
