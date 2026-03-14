@@ -187,9 +187,6 @@ export const Photo = ({
 
   return (
     <motion.div
-      drag
-      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-      whileDrag={{ scale: 1.05, zIndex: 9999 }}
       style={{
         width,
         height: "auto",
@@ -197,12 +194,11 @@ export const Photo = ({
         WebkitTouchCallout: "none",
         WebkitUserSelect: "none",
         userSelect: "none",
-        touchAction: "none",
       }}
       className={cn(
         className,
         "group relative shrink-0",
-        disabled ? "cursor-not-allowed opacity-50" : "cursor-grab active:cursor-grabbing"
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
       )}
       onMouseMove={handleMouse}
       onMouseLeave={resetMouse}
