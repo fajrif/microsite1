@@ -387,7 +387,12 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                             {/* Metrics Section */}
                             {showcase.metrics.length > 0 && (
                                 <div className="mt-16 pt-10">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+                                    {showcase.metrics_text && (
+                                        <p className="text-sm md:text-base text-[hsl(var(--ptr-primary))] tracking-wider mb-6">
+                                            {showcase.metrics_text}
+                                        </p>
+                                    )}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 lg:gap-12">
                                         {showcase.metrics.map((metric) => (
                                             <div key={metric.id}>
                                                 {!metric.hide_name && (
@@ -419,7 +424,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                             {/* Campaign Details */}
                             {(showcase.campaign_dates || showcase.market || showcase.formats || showcase.source) && (
                                 <div className="mt-10 pt-6 font-spotify">
-                                    <p className="text-base text-white leading-relaxed">
+                                    <p className="text-base font-normal text-white leading-relaxed">
                                         {[
                                             showcase.campaign_dates ? `Campaign Dates: ${showcase.campaign_dates}` : null,
                                             showcase.formats ? `Formats: ${showcase.formats}` : null,
@@ -428,9 +433,9 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                         ]
                                             .filter(Boolean)
                                             .map((item, i, arr) => (
-                                                <span className="font-medium" key={i}>
+                                                <span key={i}>
                                                     {item}
-                                                    {i < arr.length - 1 && <span className="mx-2 text-white">|</span>}
+                                                    {i < arr.length - 1 && <span className="mx-2">|</span>}
                                                 </span>
                                             ))
                                         }
