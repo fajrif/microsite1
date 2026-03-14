@@ -41,6 +41,7 @@ interface Showcase {
     market: string | null
     formats: string | null
     source: string | null
+    metrics_text: string | null
     classification: {
         id: string
         name: string
