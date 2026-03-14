@@ -215,7 +215,7 @@ export const Photo = ({
         )}
       >
         <MotionImage
-          className="rounded-2xl object-cover"
+          className="object-cover"
           fill
           src={src}
           alt={alt}
