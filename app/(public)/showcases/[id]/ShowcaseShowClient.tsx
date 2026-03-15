@@ -70,6 +70,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
     const audioRef = useRef<HTMLAudioElement>(null)
     const mobileVideoRef = useRef<HTMLVideoElement>(null)
     const mobileAudioRef = useRef<HTMLAudioElement>(null)
+    const shouldAutoPlayRef = useRef(false)
 
     const getActiveRefs = () => {
         const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
@@ -86,21 +87,44 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
     const hasDesktop = !!activeSample?.desktop_image
 
     useEffect(() => {
-        setIsPlaying(false)
         setIsBuffering(false)
         setProgress(0)
-        ;[videoRef, mobileVideoRef].forEach(ref => {
-            if (ref.current) {
-                ref.current.pause()
-                ref.current.currentTime = 0
-            }
-        })
-        ;[audioRef, mobileAudioRef].forEach(ref => {
-            if (ref.current) {
-                ref.current.pause()
-                ref.current.currentTime = 0
-            }
-        })
+            ;[videoRef, mobileVideoRef].forEach(ref => {
+                if (ref.current) {
+                    ref.current.pause()
+                    ref.current.currentTime = 0
+                }
+            })
+            ;[audioRef, mobileAudioRef].forEach(ref => {
+                if (ref.current) {
+                    ref.current.pause()
+                    ref.current.currentTime = 0
+                }
+            })
+
+        if (shouldAutoPlayRef.current) {
+            shouldAutoPlayRef.current = false
+            // Small timeout to let the new media source load
+            const timer = setTimeout(() => {
+                const { video, audio } = getActiveRefs()
+                const sample = showcase.samples[activeSampleIndex]
+                const sampleHasVideo = !!sample?.video_link
+                const sampleHasAudio = !sampleHasVideo && !!sample?.audio
+
+                if (sampleHasVideo && video.current) {
+                    video.current.play().catch(() => {})
+                    setIsPlaying(true)
+                } else if (sampleHasAudio && audio.current) {
+                    audio.current.play().catch(() => {})
+                    setIsPlaying(true)
+                } else {
+                    setIsPlaying(false)
+                }
+            }, 100)
+            return () => clearTimeout(timer)
+        } else {
+            setIsPlaying(false)
+        }
     }, [activeSampleIndex])
 
     const handleWaiting = () => setIsBuffering(true)
@@ -276,7 +300,14 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                 {showcase.samples.map((sample, index) => (
                                                     <button
                                                         key={sample.id}
-                                                        onClick={() => setActiveSampleIndex(index)}
+                                                        onClick={() => {
+                                                            if (index === activeSampleIndex) {
+                                                                togglePlay()
+                                                            } else {
+                                                                shouldAutoPlayRef.current = true
+                                                                setActiveSampleIndex(index)
+                                                            }
+                                                        }}
                                                         className={cn(
                                                             'flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm font-[900] transition-all duration-300',
                                                             index === activeSampleIndex
@@ -425,7 +456,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                             {/* Campaign Details */}
                             {(showcase.campaign_dates || showcase.market || showcase.formats || showcase.source) && (
                                 <div className="mt-10 pt-6 font-spotify">
-                                    <p className="text-base font-normal text-white leading-relaxed">
+                                    <p className="text-sm font-normal text-white leading-relaxed">
                                         {[
                                             showcase.campaign_dates ? `Campaign Dates: ${showcase.campaign_dates}` : null,
                                             showcase.formats ? `Formats: ${showcase.formats}` : null,
