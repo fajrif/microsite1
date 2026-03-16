@@ -338,7 +338,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                             alt={`${activeSample.name} desktop`}
                                                             width={1200}
                                                             height={750}
-                                                            className="w-full object-cover"
+                                                            className="w-full object-cover pointer-events-none"
                                                             unoptimized
                                                         />
                                                         {/* Phone player fully visible, centered on top */}
@@ -375,12 +375,22 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                 </>
                                             ) : (
                                                 /* Phone only */
-                                                <div
-                                                    className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col"
-                                                    style={{ borderColor: 'hsl(var(--ptr-primary))' }}
-                                                >
-                                                    {renderPhonePlayerContent()}
-                                                </div>
+                                                <>
+                                                    {/* MOBILE: phone only */}
+                                                    <div
+                                                        className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col md:hidden"
+                                                        style={{ borderColor: 'hsl(var(--ptr-primary))' }}
+                                                    >
+                                                        {renderPhonePlayerContent(mobileVideoRef, mobileAudioRef)}
+                                                    </div>
+                                                    {/* DESKTOP: phone only */}
+                                                    <div
+                                                        className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden hidden md:flex flex-col"
+                                                        style={{ borderColor: 'hsl(var(--ptr-primary))' }}
+                                                    >
+                                                        {renderPhonePlayerContent()}
+                                                    </div>
+                                                </>
                                             )
                                         )}
                                     </div>
