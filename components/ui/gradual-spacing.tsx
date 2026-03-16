@@ -10,6 +10,7 @@ interface GradualSpacingProps {
   delayMultiple?: number;
   framerProps?: Variants;
   className?: string;
+  containerClassName?: string;
 }
 
 function GradualSpacing({
@@ -21,9 +22,10 @@ function GradualSpacing({
     visible: { opacity: 1, x: 0 },
   },
   className,
+  containerClassName,
 }: GradualSpacingProps) {
   return (
-    <div className="flex justify-start flex-wrap space-x-1">
+    <div className={cn("flex justify-start flex-wrap space-x-1", containerClassName)}>
       <AnimatePresence>
         {text.split("").map((char, i) => (
           <motion.h1

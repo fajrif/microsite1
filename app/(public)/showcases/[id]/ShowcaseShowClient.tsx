@@ -316,7 +316,9 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                         )}
                                                     >
                                                         <span>{sample.name}</span>
-                                                        {sample.video_link ? (
+                                                        {index === activeSampleIndex && isPlaying ? (
+                                                            <Pause className="h-3.5 w-3.5 shrink-0 ml-2" />
+                                                        ) : sample.video_link ? (
                                                             <Play className="h-3.5 w-3.5 shrink-0 ml-2" />
                                                         ) : (
                                                             <Volume2 className="h-3.5 w-3.5 shrink-0 ml-2" />
@@ -344,8 +346,8 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                         {/* Phone player fully visible, centered on top */}
                                                         <div className="absolute inset-0 flex items-center justify-center">
                                                             <div
-                                                                className="w-[160px] h-[340px] rounded-2xl border-2 overflow-hidden"
-                                                                style={{ borderColor: 'hsl(var(--ptr-primary))' }}
+                                                                className="w-[160px] rounded-2xl border-2 overflow-hidden bg-black"
+                                                                style={{ aspectRatio: '1170/2532', borderColor: 'hsl(var(--ptr-primary))' }}
                                                             >
                                                                 {renderPhonePlayerContent(mobileVideoRef, mobileAudioRef)}
                                                             </div>
@@ -366,8 +368,8 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                         </div>
                                                         {/* Phone overlapping the right edge */}
                                                         <div
-                                                            className="relative z-10 -ml-60 shrink-0 w-[200px] h-[420px] rounded-2xl border-2 bg-black overflow-hidden"
-                                                            style={{ borderColor: 'hsl(var(--ptr-primary))' }}
+                                                            className="relative z-10 -ml-60 shrink-0 w-[200px] rounded-2xl border-2 bg-black overflow-hidden"
+                                                            style={{ aspectRatio: '1170/2532', borderColor: 'hsl(var(--ptr-primary))' }}
                                                         >
                                                             {renderPhonePlayerContent()}
                                                         </div>
@@ -378,15 +380,15 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                 <>
                                                     {/* MOBILE: phone only */}
                                                     <div
-                                                        className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden flex flex-col md:hidden"
-                                                        style={{ borderColor: 'hsl(var(--ptr-primary))' }}
+                                                        className="w-[220px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden md:hidden"
+                                                        style={{ aspectRatio: '1170/2532', borderColor: 'hsl(var(--ptr-primary))' }}
                                                     >
                                                         {renderPhonePlayerContent(mobileVideoRef, mobileAudioRef)}
                                                     </div>
                                                     {/* DESKTOP: phone only */}
                                                     <div
-                                                        className="w-[220px] h-[460px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden hidden md:flex flex-col"
-                                                        style={{ borderColor: 'hsl(var(--ptr-primary))' }}
+                                                        className="w-[220px] shrink-0 rounded-2xl border-2 bg-black overflow-hidden hidden md:block"
+                                                        style={{ aspectRatio: '1170/2532', borderColor: 'hsl(var(--ptr-primary))' }}
                                                     >
                                                         {renderPhonePlayerContent()}
                                                     </div>
@@ -404,7 +406,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                 <h2 className="text-lg font-bold text-white mb-2">
                                                     营销目标
                                                 </h2>
-                                                <p className="text-sm md:text-base font-light text-white leading-relaxed">
+                                                <p className="text-base md:text-lg font-light text-white leading-relaxed">
                                                     {showcase.objective}
                                                 </p>
                                             </div>
@@ -417,7 +419,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                 <h2 className="text-lg font-bold text-white mb-2">
                                                     解决方案
                                                 </h2>
-                                                <p className="text-sm md:text-base font-light text-white leading-relaxed">
+                                                <p className="text-base md:text-lg font-light text-white leading-relaxed">
                                                     {showcase.solution}
                                                 </p>
                                             </div>
@@ -466,7 +468,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                             {/* Campaign Details */}
                             {(showcase.campaign_dates || showcase.market || showcase.formats || showcase.source) && (
                                 <div className="mt-10 pt-6 font-spotify">
-                                    <p className="text-sm font-normal text-white leading-relaxed">
+                                    <p className="text-xs font-normal text-white leading-relaxed">
                                         {[
                                             showcase.campaign_dates ? `Campaign Dates: ${showcase.campaign_dates}` : null,
                                             showcase.formats ? `Formats: ${showcase.formats}` : null,
