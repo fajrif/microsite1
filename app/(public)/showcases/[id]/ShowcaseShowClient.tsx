@@ -66,6 +66,8 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
     const [isPlaying, setIsPlaying] = useState(false)
     const [isBuffering, setIsBuffering] = useState(false)
     const [progress, setProgress] = useState(0)
+    const [videoStarted, setVideoStarted] = useState(false)
+    const [videoEnded, setVideoEnded] = useState(false)
     const videoRef = useRef<HTMLVideoElement>(null)
     const audioRef = useRef<HTMLAudioElement>(null)
     const mobileVideoRef = useRef<HTMLVideoElement>(null)
@@ -89,6 +91,8 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
     useEffect(() => {
         setIsBuffering(false)
         setProgress(0)
+        setVideoStarted(false)
+        setVideoEnded(false)
             ;[videoRef, mobileVideoRef].forEach(ref => {
                 if (ref.current) {
                     ref.current.pause()
@@ -114,9 +118,13 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                 if (sampleHasVideo && video.current) {
                     video.current.play().catch(() => {})
                     setIsPlaying(true)
+                    setVideoStarted(true)
+                    setVideoEnded(false)
                 } else if (sampleHasAudio && audio.current) {
                     audio.current.play().catch(() => {})
                     setIsPlaying(true)
+                    setVideoStarted(true)
+                    setVideoEnded(false)
                 } else {
                     setIsPlaying(false)
                 }
@@ -137,6 +145,8 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                 video.current.pause()
             } else {
                 video.current.play()
+                setVideoStarted(true)
+                setVideoEnded(false)
             }
             setIsPlaying(!isPlaying)
         } else if (hasAudio && audio.current) {
@@ -144,6 +154,8 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                 audio.current.pause()
             } else {
                 audio.current.play()
+                setVideoStarted(true)
+                setVideoEnded(false)
             }
             setIsPlaying(!isPlaying)
         }
@@ -161,6 +173,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
         setIsPlaying(false)
         setIsBuffering(false)
         setProgress(0)
+        setVideoEnded(true)
     }
 
     const prevSample = () => {
@@ -218,9 +231,9 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                     onPlaying={handleCanPlay}
                     onCanPlay={handleCanPlay}
                     playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-contain"
                 />
-                {!isPlaying && (
+                {(!videoStarted || videoEnded) && (
                     <Image
                         src={activeSample.image}
                         alt={activeSample.name}
