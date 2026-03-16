@@ -331,7 +331,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                             hasDesktop ? (
                                                 <>
                                                     {/* MOBILE: phone player centered over full-width desktop image */}
-                                                    <div className="relative w-full h-[380px] rounded-xl overflow-hidden md:hidden">
+                                                    <div className="relative w-full h-[380px] rounded-xl overflow-hidden lg:hidden">
                                                         {/* Desktop image — natural width, fixed height covers background */}
                                                         <Image
                                                             src={activeSample.desktop_image!}
@@ -353,13 +353,13 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                     </div>
 
                                                     {/* DESKTOP: original side-by-side — desktop image + phone overlapping right */}
-                                                    <div className="relative hidden md:flex items-center shrink-0">
-                                                        <div className="relative w-[660px] rounded-xl overflow-hidden shrink-0">
+                                                    <div className="relative hidden lg:flex items-center shrink-0">
+                                                        <div className="relative w-[500px] rounded-xl overflow-hidden shrink-0">
                                                             <Image
                                                                 src={activeSample.desktop_image!}
                                                                 alt={`${activeSample.name} desktop`}
-                                                                width={660}
-                                                                height={413}
+                                                                width={500}
+                                                                height={313}
                                                                 className="w-full h-auto object-cover"
                                                                 unoptimized
                                                             />

@@ -75,7 +75,7 @@ export function ShowcasesIndexClient({ classifications }: ShowcasesIndexClientPr
                                 'w-full aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 relative',
                                 classification.showcases.length === 0
                                     ? 'border-transparent'
-                                    : 'border-transparent group-hover:border-[hsl(var(--ptr-primary))] group-hover:shadow-lg group-hover:shadow-[hsl(var(--ptr-primary))]/20'
+                                    : 'border-transparent group-hover:border-[hsl(var(--ptr-primary))] group-active:border-[hsl(var(--ptr-primary))] group-hover:shadow-lg group-active:shadow-lg group-hover:shadow-[hsl(var(--ptr-primary))]/20 group-active:shadow-[hsl(var(--ptr-primary))]/20'
                             )}>
                                 {classification.image ? (
                                     <Image
@@ -95,7 +95,7 @@ export function ShowcasesIndexClient({ classifications }: ShowcasesIndexClientPr
                                 'mt-3 text-base font-spotify font-[900] transition-colors duration-300',
                                 classification.showcases.length === 0
                                     ? 'text-white'
-                                    : 'text-white group-hover:text-[hsl(var(--ptr-primary))]'
+                                    : 'text-white group-hover:text-[hsl(var(--ptr-primary))] group-active:text-[hsl(var(--ptr-primary))]'
                             )}>
                                 {classification.name}
                             </p>

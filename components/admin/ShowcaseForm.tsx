@@ -110,7 +110,7 @@ export function ShowcaseForm({ initialData, classifications }: ShowcaseFormProps
                 videoDeleted: false,
                 orderNo: s.orderNo ?? 0,
                 isExisting: true,
-            }))
+            })).sort((a: SampleEntry, b: SampleEntry) => a.orderNo - b.orderNo)
         }
         return []
     })
