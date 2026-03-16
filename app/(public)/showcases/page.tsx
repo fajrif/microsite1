@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { ShowcasesIndexClient } from './ShowcasesIndexClient'
 
+export const dynamic = 'force-static'
+
 export const metadata = {
     title: 'Spotify 广告',
     description: '五大创意类型最佳实',

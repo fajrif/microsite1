@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   serverExternalPackages: ['ali-oss'],
   experimental: {
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
     serverActions: {
       bodySizeLimit: '500mb',
     },

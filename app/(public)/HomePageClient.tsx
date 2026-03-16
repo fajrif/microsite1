@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { ShinyButton } from '@/components/ui/shiny-button';
+import { ossImage } from '@/lib/oss-image';
 
 interface Banner {
     id: string
@@ -30,7 +31,7 @@ export default function HomePageClient({ banner }: HomePageClientProps) {
     return (
         <div
             className="relative min-h-screen flex items-center justify-center overflow-hidden bg-primary bg-cover bg-center"
-            style={{ backgroundImage: `url(${bgImage})` }}
+            style={{ backgroundImage: `url(${ossImage(bgImage, { width: 1920, quality: 80 })})` }}
         >
             {/* Primary color overlay */}
             <div className="absolute inset-0 bg-primary/90" />

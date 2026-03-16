@@ -3,11 +3,17 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Play, Pause, Volume2, Loader2 } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { cn } from '@/lib/utils'
+import { ossImage } from '@/lib/oss-image'
 import { ShowcaseSidebar } from '@/components/ShowcaseSidebar'
 import { GradualSpacing } from '@/components/ui/gradual-spacing'
 import { AnimatedDiv } from "@/components/ui/animated-div"
-import { ShutterText } from '@/components/ui/shutter-text'
+
+const ShutterText = dynamic(
+    () => import('@/components/ui/shutter-text').then(m => ({ default: m.ShutterText })),
+    { ssr: false }
+)
 
 interface Sample {
     id: string
@@ -235,7 +241,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                 />
                 {(!videoStarted || videoEnded) && (
                     <Image
-                        src={activeSample.image}
+                        src={ossImage(activeSample.image, { width: 500, quality: 80 })}
                         alt={activeSample.name}
                         fill
                         className="absolute inset-0 object-cover z-[5]"
@@ -247,7 +253,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
         ) : (
             <div className="relative w-full h-full">
                 <Image
-                    src={activeSample.image}
+                    src={ossImage(activeSample.image, { width: 500, quality: 80 })}
                     alt={activeSample.name}
                     fill
                     className="absolute inset-0 object-cover z-[5]"
@@ -303,10 +309,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                             <div className="mt-10 md:mt-16">
                                 <AnimatedDiv id="showcases-video-player" delay={0.1}>
                                     {/* Samples + Player */}
-                                    <div className={cn(
-                                        'flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-8 overflow-x-auto pb-2',
-                                        !hasDesktop && 'md:pl-[100px]'
-                                    )}>
+                                    <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-8 overflow-x-auto pb-2">
                                         {/* Left: Samples list */}
                                         {showcase.samples.length > 0 && (
                                             <div className="flex flex-col space-y-2 w-44 shrink-0">
@@ -349,7 +352,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                     <div className="relative w-full h-[380px] rounded-xl overflow-hidden lg:hidden">
                                                         {/* Desktop image — natural width, fixed height covers background */}
                                                         <Image
-                                                            src={activeSample.desktop_image!}
+                                                            src={ossImage(activeSample.desktop_image!, { width: 1200, quality: 80 })}
                                                             alt={`${activeSample.name} desktop`}
                                                             width={1200}
                                                             height={750}
@@ -371,7 +374,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                                     <div className="relative hidden lg:flex items-center shrink-0">
                                                         <div className="relative w-[500px] rounded-xl overflow-hidden shrink-0">
                                                             <Image
-                                                                src={activeSample.desktop_image!}
+                                                                src={ossImage(activeSample.desktop_image!, { width: 1200, quality: 80 })}
                                                                 alt={`${activeSample.name} desktop`}
                                                                 width={500}
                                                                 height={313}
@@ -449,7 +452,7 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                                             {showcase.metrics_text}
                                         </p>
                                     )}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 lg:gap-12">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                         {showcase.metrics.map((metric) => (
                                             <div key={metric.id}>
                                                 {!metric.hide_name && (

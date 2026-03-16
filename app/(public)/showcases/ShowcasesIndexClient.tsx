@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { ossImage } from '@/lib/oss-image'
 import { GradualSpacing } from '@/components/ui/gradual-spacing'
 import { AnimatedDiv } from "@/components/ui/animated-div"
 import { PhotoGallery, PhotoGalleryItem } from '@/components/ui/photo-gallery'
@@ -29,7 +30,7 @@ export function ShowcasesIndexClient({ classifications }: ShowcasesIndexClientPr
 
     const galleryItems: PhotoGalleryItem[] = classifications.map((classification) => ({
         id: classification.id,
-        src: classification.image || '',
+        src: ossImage(classification.image || '', { width: 600, quality: 80 }),
         alt: classification.name,
         label: classification.name,
         disabled: classification.showcases.length === 0,
@@ -80,7 +81,7 @@ export function ShowcasesIndexClient({ classifications }: ShowcasesIndexClientPr
                                 )}>
                                     {classification.image ? (
                                         <Image
-                                            src={classification.image}
+                                            src={ossImage(classification.image, { width: 400, quality: 80 })}
                                             alt={classification.name}
                                             fill
                                             className="object-cover"
