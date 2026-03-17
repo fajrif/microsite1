@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose'
 
-const COOKIE_NAME = 'site-access-token'
+const COOKIE_NAME = 'microsite1-access-token'
 const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET)
 
 export { COOKIE_NAME }
