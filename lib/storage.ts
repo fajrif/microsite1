@@ -54,12 +54,15 @@ export async function uploadFile(file: File, filename?: string): Promise<string>
           parallel: 2,
           partSize: 10 * 1024 * 1024, // 10MB parts
           timeout: 600_000, // 10 minutes for multipart
+          headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
         })
       } finally {
         await fs.unlink(tmpFile).catch(() => {})
       }
     } else {
-      await oss.put(objectKey, buffer)
+      await oss.put(objectKey, buffer, {
+        headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
+      })
     }
     return getOssUrl(objectKey)
   }

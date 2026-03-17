@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { ChevronLeft, Volume2 } from 'lucide-react'
 import {
     TreeProvider,
@@ -26,7 +25,6 @@ interface Props {
 }
 
 export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
-    const router = useRouter()
 
     // Find which classification contains the current showcase so we can expand it by default
     const activeClassificationId = classifications.find((c) =>
@@ -63,33 +61,34 @@ export function ShowcaseSidebar({ classifications, currentShowcaseId }: Props) {
                                         level={1}
                                         isLast={sIdx === classification.showcases.length - 1}
                                     >
-                                        <TreeNodeTrigger
-                                            className={
-                                                showcase.slug === currentShowcaseId
-                                                    ? 'mt-2 bg-[hsl(var(--ptr-primary))] text-primary font-medium hover:bg-[hsl(var(--ptr-primary))] rounded-xl px-2 py-1.5 mx-0'
-                                                    : 'mt-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl px-2 py-1.5 mx-0'
-                                            }
-                                            onClick={() => router.push(`/showcases/${showcase.slug}`)}
-                                        >
-                                            <TreeExpander />
-                                            <TreeIcon
-                                                icon={<Volume2 className="h-3.5 w-3.5" />}
+                                        <Link href={`/showcases/${showcase.slug}`} prefetch>
+                                            <TreeNodeTrigger
                                                 className={
                                                     showcase.slug === currentShowcaseId
-                                                        ? 'text-primary'
-                                                        : 'text-white/50'
-                                                }
-                                            />
-                                            <TreeLabel
-                                                className={
-                                                    showcase.slug === currentShowcaseId
-                                                        ? 'text-sm text-primary font-medium'
-                                                        : 'text-sm text-white/70'
+                                                        ? 'mt-2 bg-[hsl(var(--ptr-primary))] text-primary font-medium hover:bg-[hsl(var(--ptr-primary))] rounded-xl px-2 py-1.5 mx-0'
+                                                        : 'mt-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl px-2 py-1.5 mx-0'
                                                 }
                                             >
-                                                {showcase.name}
-                                            </TreeLabel>
-                                        </TreeNodeTrigger>
+                                                <TreeExpander />
+                                                <TreeIcon
+                                                    icon={<Volume2 className="h-3.5 w-3.5" />}
+                                                    className={
+                                                        showcase.slug === currentShowcaseId
+                                                            ? 'text-primary'
+                                                            : 'text-white/50'
+                                                    }
+                                                />
+                                                <TreeLabel
+                                                    className={
+                                                        showcase.slug === currentShowcaseId
+                                                            ? 'text-sm text-primary font-medium'
+                                                            : 'text-sm text-white/70'
+                                                    }
+                                                >
+                                                    {showcase.name}
+                                                </TreeLabel>
+                                            </TreeNodeTrigger>
+                                        </Link>
                                     </TreeNode>
                                 ))}
                             </TreeNodeContent>
