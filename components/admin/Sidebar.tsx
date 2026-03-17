@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Users,
+  UserCheck,
   X,
   Layers,
   Presentation,
@@ -24,6 +25,7 @@ export default function Sidebar() {
     { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
     { name: 'Classifications', href: '/admin/classifications', icon: Layers },
     { name: 'Showcases', href: '/admin/showcases', icon: Presentation },
+    { name: 'Users', href: '/admin/users', icon: UserCheck },
   ]
 
   return (

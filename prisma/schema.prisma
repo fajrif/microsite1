@@ -181,6 +181,19 @@ model Metric {
   @@map("metrics")
 }
 
+model User {
+  id            String   @id @default(uuid())
+  username      String   @unique
+  full_name     String
+  phone         String?
+  company       String?
+  password_hash String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("users")
+}
+
 model Banner {
   id                String   @id @default(uuid())
   order_no          Int      @default(0)
