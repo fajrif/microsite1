@@ -17,7 +17,7 @@ const notoSans = Noto_Sans({
 const spotifyMixWide = localFont({
     src: [
         { path: './fonts/SpotifyMixWide/SpotifyMixWide-Regular.woff2', weight: '400', style: 'normal' },
-        { path: './fonts/SpotifyMixWide/SpotifyMixWide-Bold.woff2', weight: '700', style: 'normal' },
+        { path: './fonts/SpotifyMixWide/SpotifyMixWide-Black.woff2', weight: '900', style: 'normal' },
     ],
     variable: '--font-spotify-mix-wide',
     display: 'swap',
