@@ -122,12 +122,12 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                 const sampleHasAudio = !sampleHasVideo && !!sample?.audio
 
                 if (sampleHasVideo && video.current) {
-                    video.current.play().catch(() => {})
+                    video.current.play().catch(() => { })
                     setIsPlaying(true)
                     setVideoStarted(true)
                     setVideoEnded(false)
                 } else if (sampleHasAudio && audio.current) {
-                    audio.current.play().catch(() => {})
+                    audio.current.play().catch(() => { })
                     setIsPlaying(true)
                     setVideoStarted(true)
                     setVideoEnded(false)
@@ -149,21 +149,31 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
         if (hasVideo && video.current) {
             if (isPlaying) {
                 video.current.pause()
+                setIsPlaying(false)
             } else {
-                video.current.play()
+                setIsBuffering(true)
+                setIsPlaying(true)
                 setVideoStarted(true)
                 setVideoEnded(false)
+                video.current.play().catch(() => {
+                    setIsBuffering(false)
+                    setIsPlaying(false)
+                })
             }
-            setIsPlaying(!isPlaying)
         } else if (hasAudio && audio.current) {
             if (isPlaying) {
                 audio.current.pause()
+                setIsPlaying(false)
             } else {
-                audio.current.play()
+                setIsBuffering(true)
+                setIsPlaying(true)
                 setVideoStarted(true)
                 setVideoEnded(false)
+                audio.current.play().catch(() => {
+                    setIsBuffering(false)
+                    setIsPlaying(false)
+                })
             }
-            setIsPlaying(!isPlaying)
         }
     }
 
@@ -231,9 +241,11 @@ export function ShowcaseShowClient({ showcase, allClassifications }: ShowcaseSho
                 <video
                     ref={vRef}
                     src={activeSample.video_link!}
+                    preload="metadata"
                     onTimeUpdate={handleTimeUpdate}
                     onEnded={handleEnded}
                     onWaiting={handleWaiting}
+                    onStalled={handleWaiting}
                     onPlaying={handleCanPlay}
                     onCanPlay={handleCanPlay}
                     playsInline
